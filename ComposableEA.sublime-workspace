@@ -1,0 +1,1218 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"Int",
+				"Int"
+			],
+			[
+				"final",
+				"finaldensityyoung"
+			],
+			[
+				"finaldensity",
+				"finaldensitytrees"
+			],
+			[
+				"finaldensi",
+				"finaldensityempty"
+			],
+			[
+				"ng",
+				"ng"
+			],
+			[
+				"neigh",
+				"neighbourhoodbuffer"
+			],
+			[
+				"one",
+				"one"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "src/main/scala/Genome.scala",
+			"settings":
+			{
+				"buffer_size": 1766,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/main/scala/Breeding.scala",
+			"settings":
+			{
+				"buffer_size": 159,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/test/scala/GenomeTest.scala",
+			"settings":
+			{
+				"buffer_size": 1679,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/main/scala/Objective.scala",
+			"settings":
+			{
+				"buffer_size": 84,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/main/scala/draft.scala",
+			"settings":
+			{
+				"buffer_size": 0,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/main/scala/Phenotype.scala",
+			"settings":
+			{
+				"buffer_size": 90,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 49.0,
+		"selected_items":
+		[
+			[
+				"open",
+				"View: Toggle Open Files in Side Bar"
+			],
+			[
+				"file",
+				"View: Toggle Open Files in Side Bar"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"package",
+				"Package Control: List Packages"
+			],
+			[
+				"mark",
+				"Set Syntax: Markdown"
+			],
+			[
+				"MARKDO",
+				"Set Syntax: Markdown"
+			],
+			[
+				"syntax:mark",
+				"Set Syntax: Markdown"
+			],
+			[
+				"go",
+				"Set Syntax: Go"
+			]
+		],
+		"width": 435.0
+	},
+	"console":
+	{
+		"height": 125.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/experiments/openmoleBosquetPSE.scala",
+		"/Users/guillaume/Work/Dev/ModelCA/src/neighbourhoodavg.c",
+		"/Users/guillaume/Work/Dev/ModelCA/src/main.c",
+		"/Users/guillaume/Work/Dev/ModelCA/src/init.c",
+		"/Users/guillaume/Work/Dev/ModelCA/src/initparams.c",
+		"/Users/guillaume/Work/Dev/ModelCA/src/transitionsbosquettype1.c",
+		"/Users/guillaume/Work/Dev/ModelCA/Makefile",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/analyses/anim1seed.sh",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/runbosquetbse.scala",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/openmoleBosquetPSE.scala",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/outputanimation.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initgridcells.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodcircular.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initcellintpinitclump.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/Makefile",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/cellint.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initgridclump.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/runsimus.scala",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initcell.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initcellarraydoubleclampedgaussian.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initcellintpinit.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initcellno.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initgrid.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initgridoneseed.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/runexamplebistabilitebosquet.scala",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/runlongreunbaudena.scala",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/runbaudenabse.scala",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/runbaudenaequilibriumstatesc2c3.scala",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodindividual.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitionsbaudena.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodindividualaverage.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/CREATE TABLE settings (",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/outputdensitiestimeseries.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/tmp/sql",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/tmp/sqlbistabiliteexamplebaudena.sql",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/build.sbt",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/caengine.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/tmp/genplan.hs",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodnoshape.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodshape.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/init.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/init.c",
+		"/Users/guillaume/Downloads/SeminaireInterneUMR.amr",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodfullgrid.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitionode.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transition.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitionode.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/outputodetimeseries.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodcomputeavg.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodcomputesum.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initcellclampedgaussian.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/stochasticity.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/stochasticity.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodglobalaverage.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodglobal.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitionsbosquettype1.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/caengine.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/outputdensitieserrortimeseries.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/speciesoncellarraydouble.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initparams.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitionmarkov.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/output.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/outputfinaldensities.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/outputanimation.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/main.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/cellarraydouble.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/cellarraydouble.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initcellpinit.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initcellarraydoublepinit.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhood.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodavg.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodcompute.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodindividualaveraged.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/speciesoncell.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/cell.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/grid.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/grid.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initparams.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initgridcells.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/parseoptions.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initgridpinit.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initgridpinit.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/output.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/Computational simulation is widely used to study c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodmeanfield.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/cellint.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitionmarkov.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/countablestates.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitionsbaudena.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/tests.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitions.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/runexamplebistabilitebaudena.scala",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/plotbaudenabse.gnuplot",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/parseoptions.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BehaviourSearch/marius-behaviour/src/main/scala/MariusBehaviourSearchHitMap.scala",
+		"/Users/guillaume/Work/ExperiencesInSilico/BehaviourSearch/marius-behaviour/src/main/scala/Behaviour.scala",
+		"/Users/guillaume/Notes/journal_de_bord.txt",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodmeanfield.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitions.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/gridcellstateneighbourhood.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/gridtorus.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/transitionsbosquettype1.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodnoshape.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/tmp/newmeanfield",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/tmp/oldbosquet",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/tmp/tmpcircularavg",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodcircularexcludeself.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhoodcircular.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/Untitled0.ipynb",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/plotbaudenaequilibriumstatesc2c3.gnuplot",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/plotexamplebistabilitetimeseries.py",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/tmp1",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/tmp2",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/dataxp/tmp.sql",
+		"/Users/guillaume/Library/Application Support/Sublime Text 2/Packages/User/Preferences.sublime-settings",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/scripts/build.sbt",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/initparamsbosquettype1.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/neighbourhood.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/cell.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/globalsmeanfieldneighbourhood.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/globalsmeanfieldneighbourhood.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/globalsno.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/caengine.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/caengine.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/transitions_bosquet_type1.c",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/params.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/bosquet.h",
+		"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/grid.h"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+			"*.h,*.c",
+			"*.h",
+			"*.c",
+			"*.{c,h}",
+			"*.h",
+			"*.c",
+			"*.h",
+			"*.c",
+			"*.c *.h",
+			"",
+			"*.c",
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+			"F",
+			"F:",
+			"('",
+			"success",
+			",",
+			"--",
+			"SRCDIR",
+			"pinitoutclump",
+			"pinit",
+			"optpinitinclump",
+			"curopt",
+			"optinitbase",
+			"maxwait",
+			",",
+			"gaussian",
+			"  ",
+			"StoreActor",
+			"Settings",
+			"models",
+			"Settings",
+			",",
+			"colors",
+			"stepsize",
+			"sampleevery",
+			"RunResult",
+			"command",
+			"mean",
+			"avg",
+			"pinit",
+			"timeseriesavgerror",
+			"timeseriessumerror",
+			"computecellneighbourhood",
+			"rng",
+			"r",
+			"extern",
+			"initcellgaussian.h",
+			"timeseries",
+			"i",
+			"g",
+			"y",
+			"x",
+			"y",
+			"x",
+			"nspecies=",
+			"nspecies =",
+			"nspecies",
+			"frame",
+			";\n",
+			"itermax_tmp",
+			"iter",
+			"outputstart",
+			"itermax",
+			"newstate",
+			"neighbourhood(",
+			"ifndef",
+			"neighbourscount",
+			"neighbourhooddouble",
+			"neighbourscount",
+			"neighbourhoodavg",
+			"newstate",
+			"equal",
+			"val",
+			"initgridpinit",
+			"initcellint.h",
+			"val",
+			"nstates",
+			"countablestates",
+			"neighbourhooddouble",
+			"neighbourhoodmean",
+			"neighbourhoodmeanfield",
+			"neighbourhood",
+			"state2",
+			"neighbourhoodsum",
+			"neighbourhoodmean",
+			"neighbourhood",
+			"nstates",
+			"state2",
+			"state1",
+			"getneighbourhood",
+			"state",
+			"newstate",
+			"curstate",
+			"REAL DEFAULT",
+			"REAL",
+			"nstates",
+			"Cell",
+			"transitions",
+			"Cell",
+			"COMPILER",
+			"gcc",
+			"neighbour",
+			"baudena",
+			":",
+			";",
+			",",
+			":",
+			"meanfield",
+			"S",
+			"Settings",
+			", ",
+			",",
+			"_",
+			":",
+			"modelSettings",
+			":",
+			"[MODELSETTINGS]",
+			"Setting",
+			"setting",
+			"Setting",
+			"setting",
+			"Setting",
+			"setting",
+			"Setting",
+			"setting",
+			"Setting",
+			"setting",
+			"Setting",
+			"exclu",
+			"delete",
+			"in .+avg=",
+			" Q97.*$",
+			"in.*avg=",
+			"avg",
+			"values",
+			"genome",
+			"REAL",
+			"finalavgdensitytreesdisc",
+			"REAL"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"SettingsSavane",
+			"xcoord",
+			"x",
+			"nspecies",
+			"speciesoncell",
+			"neighbourhooddouble",
+			"neighbourhoodmean",
+			"",
+			"1",
+			"2",
+			"3",
+			"7",
+			"4",
+			"6",
+			"",
+			"\\n",
+			"char",
+			"\\n",
+			"copycell",
+			"neighbousCoordinates",
+			"neighbour_radius",
+			"g",
+			"Grid",
+			"nstates",
+			"#",
+			"*",
+			"#",
+			";; ",
+			"#"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": true,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "src/main/scala/Genome.scala",
+					"settings":
+					{
+						"buffer_size": 1766,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								509,
+								509
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Scala/Scala.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/main/scala/Breeding.scala",
+					"settings":
+					{
+						"buffer_size": 159,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								159,
+								159
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Scala/Scala.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/test/scala/GenomeTest.scala",
+					"settings":
+					{
+						"buffer_size": 1679,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								558,
+								558
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Scala/Scala.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 54.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/main/scala/Objective.scala",
+					"settings":
+					{
+						"buffer_size": 84,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								80,
+								80
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Scala/Scala.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "src/main/scala/draft.scala",
+					"settings":
+					{
+						"buffer_size": 0,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Scala/Scala.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "src/main/scala/Phenotype.scala",
+					"settings":
+					{
+						"buffer_size": 90,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								90,
+								90
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Scala/Scala.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 34.0
+	},
+	"input":
+	{
+		"height": 33.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 102.0
+	},
+	"replace":
+	{
+		"height": 64.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"neighbourhoo",
+				"modelCA/src/neighbourhoodcircular.c"
+			],
+			[
+				"neighbourhooav",
+				"modelCA/src/neighbourhoodindividualaverage.c"
+			],
+			[
+				"make",
+				"modelCA/Makefile"
+			],
+			[
+				"makefile",
+				"modelCA/Makefile"
+			],
+			[
+				"runsimus",
+				"scripts/runsimus.scala"
+			],
+			[
+				"outputanimation",
+				"modelCA/src/outputanimation.c"
+			],
+			[
+				"caengine.c",
+				"modelCA/src/caengine.c"
+			],
+			[
+				"neighbourhoodcircul",
+				"modelCA/src/neighbourhoodcircular.c"
+			],
+			[
+				"runbaudena",
+				"scripts/runbaudenaequilibriumstatesc2c3.scala"
+			],
+			[
+				"neighbourhoodcircular",
+				"modelCA/src/neighbourhoodcircular.c"
+			],
+			[
+				"neighbourhoodnoshape",
+				"modelCA/src/neighbourhoodnoshape.c"
+			],
+			[
+				"init.c",
+				"modelCA/src/init.c"
+			],
+			[
+				"init.h",
+				"modelCA/src/init.h"
+			],
+			[
+				"neighbourhoodshape",
+				"modelCA/src/neighbourhoodshape.h"
+			],
+			[
+				"stochastic",
+				"modelCA/src/stochasticity.c"
+			],
+			[
+				"neighbourhoodcomputeavg",
+				"modelCA/src/neighbourhoodcomputeavg.c"
+			],
+			[
+				"neighbourhoodindividual",
+				"modelCA/src/neighbourhoodindividual.c"
+			],
+			[
+				"caengine",
+				"modelCA/src/caengine.c"
+			],
+			[
+				"compute",
+				"modelCA/src/neighbourhoodcomputesum.c"
+			],
+			[
+				"neighbourhood",
+				"modelCA/src/neighbourhoodindividual.c"
+			],
+			[
+				"stochasticity.c",
+				"modelCA/src/stochasticity.c"
+			],
+			[
+				"neighbourhoodindividu",
+				"modelCA/src/neighbourhoodindividualaverage.c"
+			],
+			[
+				"transitionbosquet",
+				"modelCA/src/transitionsbosquettype1.c"
+			],
+			[
+				"neighbourhoodglobal",
+				"modelCA/src/neighbourhoodglobal.c"
+			],
+			[
+				"",
+				"modelCA/src/neighbourhoodglobalaverage.c"
+			],
+			[
+				"outputode",
+				"modelCA/src/outputodetimeseries.c"
+			],
+			[
+				"transitionode",
+				"modelCA/src/transitionode.c"
+			],
+			[
+				"output",
+				"modelCA/src/outputodetimeseries.c"
+			],
+			[
+				"transitionode.c",
+				"modelCA/src/transitionode.c"
+			],
+			[
+				"stocha",
+				"modelCA/src/stochasticity.h"
+			],
+			[
+				"gaussian",
+				"modelCA/src/initcellarraydoubleclampedgaussian.c"
+			],
+			[
+				"stochasticity.h",
+				"modelCA/src/stochasticity.h"
+			],
+			[
+				"stochast",
+				"modelCA/src/stochasticity.h"
+			],
+			[
+				"stochastici",
+				"modelCA/src/stochasticity.c"
+			],
+			[
+				"init.",
+				"modelCA/src/init.c"
+			],
+			[
+				"stochasticity",
+				"modelCA/src/stochasticity.c"
+			],
+			[
+				"neighbourhoodcompute",
+				"modelCA/src/neighbourhoodcomputesum.c"
+			],
+			[
+				"outputdensitie",
+				"modelCA/src/outputdensitiestimeseries.c"
+			],
+			[
+				"transition.h",
+				"modelCA/src/transitionode.h"
+			],
+			[
+				"speciesoncell",
+				"modelCA/src/speciesoncellarraydouble.c"
+			],
+			[
+				"outputdensities",
+				"modelCA/src/outputdensitiestimeseries.c"
+			],
+			[
+				"transitionbaudena",
+				"modelCA/src/transitionsbaudena.c"
+			],
+			[
+				"transitionmarkov",
+				"modelCA/src/transitionmarkov.c"
+			],
+			[
+				"main.c",
+				"modelCA/src/main.c"
+			],
+			[
+				"transitionmarkov.c",
+				"modelCA/src/transitionmarkov.c"
+			],
+			[
+				"transit",
+				"modelCA/src/transition.h"
+			],
+			[
+				"main",
+				"modelCA/src/main.c"
+			],
+			[
+				"transitionbosqu",
+				"modelCA/src/transitionsbosquettype1.c"
+			],
+			[
+				"outputdensiti",
+				"modelCA/src/outputdensitiestimeseries.c"
+			],
+			[
+				"caengin.c",
+				"modelCA/src/caengine.c"
+			],
+			[
+				"caengine.h",
+				"modelCA/src/caengine.h"
+			],
+			[
+				"outputanima",
+				"modelCA/src/outputanimation.h"
+			],
+			[
+				"ou",
+				"modelCA/src/outputfinaldensities.c"
+			],
+			[
+				"outputfinal",
+				"modelCA/src/outputfinaldensities.c"
+			],
+			[
+				"output.h",
+				"modelCA/src/output.h"
+			],
+			[
+				"modelparam",
+				"modelCA/src/initparams.c"
+			],
+			[
+				"neighbourhoodindivi",
+				"modelCA/src/neighbourhoodindividualaverage.c"
+			],
+			[
+				"neighbourhoodcomputesum",
+				"modelCA/src/neighbourhoodcomputesum.c"
+			],
+			[
+				"neighbourhoodavg",
+				"modelCA/src/neighbourhoodavg.c"
+			],
+			[
+				"neighbourhoodcom",
+				"modelCA/src/neighbourhoodcompute.h"
+			],
+			[
+				"neighbo",
+				"modelCA/src/neighboorhoodcompute.h"
+			],
+			[
+				"neighbourhoodsum",
+				"modelCA/src/neighbourhoodsum.c"
+			],
+			[
+				"tranition",
+				"modelCA/src/transitionode.c"
+			],
+			[
+				"inicell",
+				"modelCA/src/initcellarraydoublepinit.c"
+			],
+			[
+				"speciesonarra",
+				"modelCA/src/speciesoncellarraydouble.c"
+			],
+			[
+				"cellarraydouble",
+				"modelCA/src/initcellarraydoublepinit.c"
+			],
+			[
+				"transitionmarkov.h",
+				"modelCA/src/transitionmarkov.h"
+			],
+			[
+				"transitio",
+				"modelCA/src/transition.h"
+			],
+			[
+				"transition",
+				"modelCA/src/transitionmarkov.c"
+			],
+			[
+				"transitionbaude",
+				"modelCA/src/transitionsbaudena.c"
+			],
+			[
+				"cellint.c",
+				"modelCA/src/cellint.c"
+			],
+			[
+				"params",
+				"modelCA/src/initparams.c"
+			],
+			[
+				"initcell.h",
+				"modelCA/src/initcell.h"
+			],
+			[
+				"parseoption",
+				"modelCA/src/parseoptions.h"
+			],
+			[
+				"initgridpinit",
+				"modelCA/src/initgridpinit.c"
+			],
+			[
+				"countable",
+				"modelCA/src/countablestates.h"
+			],
+			[
+				"cell.h",
+				"modelCA/src/cell.h"
+			],
+			[
+				"cellint",
+				"modelCA/src/cellint.c"
+			],
+			[
+				"grid",
+				"modelCA/src/grid.h"
+			],
+			[
+				"grid.c",
+				"modelCA/src/grid.c"
+			],
+			[
+				"grid.h",
+				"modelCA/src/grid.h"
+			],
+			[
+				"cell",
+				"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/cellint.c"
+			],
+			[
+				"outputanimation.c",
+				"modelCA/src/outputanimation.c"
+			],
+			[
+				"outputfinaldensities",
+				"modelCA/src/outputfinaldensities.c"
+			],
+			[
+				"neighbourhoodmeanfi",
+				"modelCA/src/neighbourhoodmeanfield.c"
+			],
+			[
+				"neighbourhoodindivid",
+				"modelCA/src/neighbourhoodindividual.c"
+			],
+			[
+				"transitionbosquettype1",
+				"modelCA/src/transitionsbosquettype1.c"
+			],
+			[
+				"outputdensitiestime",
+				"modelCA/src/outputdensitiestimeseries.c"
+			],
+			[
+				"neighbourhoomeanfiel",
+				"modelCA/src/neighbourhoodmeanfield.c"
+			],
+			[
+				"neighb",
+				"modelCA/src/neighbourhoodindividualaveraged.c"
+			],
+			[
+				"neighbourh",
+				"modelCA/src/neighbourhoodindividualaveraged.c"
+			],
+			[
+				"neighbourhoodindividualave",
+				"modelCA/src/neighbourhoodindividualaveraged.c"
+			],
+			[
+				"neighbourhood.h",
+				"modelCA/src/neighbourhood.h"
+			],
+			[
+				"marko",
+				"modelCA/src/transitionmarkov.c"
+			],
+			[
+				"cell.c",
+				"modelCA/src/cellint.c"
+			],
+			[
+				"counta",
+				"modelCA/src/countablestates.h"
+			],
+			[
+				"cell.",
+				"modelCA/src/cell.h"
+			],
+			[
+				"cel",
+				"modelCA/src/cell.h"
+			],
+			[
+				"initgr",
+				"modelCA/src/initgridpinit.c"
+			],
+			[
+				"initparams",
+				"modelCA/src/initparams.c"
+			],
+			[
+				"caengin",
+				"modelCA/src/caengine.c"
+			],
+			[
+				"runbse",
+				"scripts/runbaudenabse.scala"
+			],
+			[
+				"runlongr",
+				"scripts/runlongreunbaudena.scala"
+			],
+			[
+				"makefil",
+				"modelCA/Makefile"
+			],
+			[
+				"option",
+				"modelCA/src/parseoptions.c"
+			],
+			[
+				"outputanim",
+				"modelCA/src/outputanimation.c"
+			],
+			[
+				"transitionsbosqu",
+				"modelCA/src/transitionsbosquettype1.c"
+			],
+			[
+				"run",
+				"scripts/runlongreunbaudena.scala"
+			],
+			[
+				"gnuplot",
+				"scripts/plotbaudenabse.gnuplot"
+			],
+			[
+				"mariusbehavioursearch",
+				"/Users/guillaume/Work/ExperiencesInSilico/BehaviourSearch/marius-behaviour/src/main/scala/MariusBehaviourSearchHitMap.scala"
+			],
+			[
+				"plot",
+				"scripts/plotexamplebistabilitetimeseries.py"
+			],
+			[
+				"mamake",
+				"modelCA/Makefile"
+			],
+			[
+				"transi",
+				"modelCA/src/transitionsbosquettype1.c"
+			],
+			[
+				"parseoptions.c",
+				"modelCA/src/parseoptions.c"
+			],
+			[
+				"build.s",
+				"build.sbt"
+			],
+			[
+				"baudena",
+				"modelCA/src/transitionsbaudena.c"
+			],
+			[
+				"parseoptions",
+				"modelCA/src/parseoptions.c"
+			],
+			[
+				"neighbourhoodmeanfield",
+				"modelCA/src/neighbourhoodmeanfield.c"
+			],
+			[
+				"neighbou",
+				"modelCA/src/neighbourhoodmeanfield.c"
+			],
+			[
+				"outputani",
+				"modelCA/src/outputanimation.h"
+			],
+			[
+				"initparams.c",
+				"modelCA/src/initparams.c"
+			],
+			[
+				"parseo",
+				"modelCA/src/parseoptions.c"
+			],
+			[
+				"parse",
+				"modelCA/src/parseoptions.c"
+			],
+			[
+				"parseopt",
+				"modelCA/src/parseoptions.h"
+			],
+			[
+				"cellint.h",
+				"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/cellint.h"
+			],
+			[
+				"cellin",
+				"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/cellint.c"
+			],
+			[
+				"celling",
+				"/Users/guillaume/Work/ExperiencesInSilico/BistabiliteSavane/modelCA/src/grid.c"
+			],
+			[
+				"gridcellstate",
+				"modelCA/src/gridcellstateneighbourhood.c"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"selected_items":
+		[
+			[
+				"",
+				"/Users/guillaume/Work/Ecrits/Biblio.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true
+}
