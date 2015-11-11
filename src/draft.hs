@@ -2,11 +2,13 @@
 
 import Data.Ord
 import Data.List
+import qualified Data.Map.Strict as Map
 import Control.Lens
 import System.Random
 import Control.Monad.Identity
 import Control.Monad.Trans
 import Control.Monad.Writer
+import Control.Monad.State
 import Data.Monoid
 
 -- TODO: enlever les duplicats dans la composition de breedings
@@ -15,12 +17,17 @@ import Data.Monoid
 
 type Breeding i m g = [i] -> m [g]
 
--- C'est l'étape distribuée en parallèle (équivalent à évaluation dans mgo). Elle ne fait pas intervenir la monad m qui contient l'état de l'évolution
--- car cet état peut avoir besoin d'être synchronisé entre les différents éléments évalués. La mise à jour de l'état devra donc être traité à une étape suivante (objective) si besoin
--- Ceci impose la restriction que les expressions des individus ne peut pas dépendre les unes des autres, mais c'est une restriction nécessaire pour le parallelisme.
-type Expression g m p = g -> m p 
+-- C'est l'étape distribuée en parallèle (équivalent à évaluation dans mgo).
+-- Elle ne fait pas intervenir la monad m qui contient l'état de l'évolution
+-- car cet état peut avoir besoin d'être synchronisé entre les différents
+-- éléments évalués. La mise à jour de l'état devra donc être traité à une
+-- étape suivante (objective) si besoin Ceci impose la restriction que les
+-- expressions des individus ne peut pas dépendre les unes des autres, mais
+-- c'est une restriction nécessaire pour le parallelisme.
 
-type Objective p m i = [p] -> m [i]
+type Expression g m i = g -> m i 
+
+type Objective m i = [i] -> m [i]
 
 ------------------------------------------------------------
 
@@ -32,7 +39,7 @@ bindB b1 b2 = \individuals -> do
     b2 g1s individuals 
 
 breedAs :: (i -> i1) -> Breeding i1 m g1 -> Breeding i m g1
-breedAs itoi1 b = b . (fmap itoi1)
+breedAs itoi1 b = b . fmap itoi1
 
 -- zipBindB :: (Monad m) => ([g1] -> Breeding i m g2) -> ([g1] -> Breeding ig1 (, g2) m) 
 -- zipBindB b2 = \g1s indivs -> fmap (zip g1s) (b2 g1s indivs) 
@@ -49,34 +56,42 @@ withGenomeE :: (Monad m) => Expression g m p -> Expression g m (p,g)
 withGenomeE express = \g -> (express g) >>= \p -> return (p, g)
 -- withGenomeE express = bindE (return . id) (\g -> (fmap (\p -> (p,g))) . express )
 
-bindO :: (Monad m) => Objective p m i1 -> ([i1] -> Objective p m i2) -> Objective p m i2
+bindO :: (Monad m) => Objective m i -> ([i] -> Objective m i) -> Objective m i
 bindO o1 o2 = \phenotypes -> do
     i1s <- o1 phenotypes
     o2 i1s phenotypes
 
-objectiveAs :: (Monad m) => (p -> p1) -> (p -> i1 -> i) -> Objective p1 m i1 -> Objective p m i
+objectiveAs :: (Monad m) => (p -> p1) -> (p -> i1 -> i) -> Objective m i1 -> Objective m i
 objectiveAs getp1 seti1 o = undefined -- (fmap (fmap (\(p,i1) -> set p i1))) . ( otup ) . (fmap (\p -> (p,getp1)))
 
 -- select the i that also respect the second objective 
 
--- intersectionO    
+andO :: (Monad m, Eq i) => Objective m i -> [i] -> Objective m i
+andO o =  \selected1s -> fmap (intersect selected1s) . o
 
--- unionO
+orO :: (Monad m, Eq i) => Objective m i -> [i] -> Objective m i
+orO o =  \selected1s -> fmap (union selected1s) . o
 
--- paretoO
+-- Not associative
+
+thenO :: (Monad m) => Objective m i -> [i] -> Objective m i
+thenO o selected1s _ = o selected1s
+
+
+-- o1 `bindO` (thenO o2) `bindO` byNiche
 
 -------------------------------
 
 ---- Functions for running an EA ----
 
-stepEA :: (Monad m) => m () -> Breeding i m g -> Expression g m p -> Objective p m i -> [i] -> m [i]
+stepEA :: (Monad m) => m () -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
 stepEA stepContext breeding expression objective pop = do
     stepContext
     breeded <- breeding pop
     expressed <- mapM expression breeded --mapM est l'étape parallelisable
     objective expressed
 
-runEAUntil :: (Monad m) => (m [i] -> Bool) -> (m [i] -> IO () ) -> m () -> Breeding i m g -> Expression g m p -> Objective p m i  -> m [i] -> IO (m [i])
+runEAUntil :: (Monad m) => (m [i] -> Bool) -> (m [i] -> IO () ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i  -> m [i] -> IO (m [i])
 runEAUntil stopCondition outputF stepContext b e o mpop = do
    if (stopCondition mpop)
    then return mpop
@@ -85,7 +100,7 @@ runEAUntil stopCondition outputF stepContext b e o mpop = do
        let newmpop = mpop >>= (stepEA stepContext b e o)
        runEAUntil stopCondition outputF stepContext b e o newmpop
 
-runEA :: (Monad m) => (m [i] -> IO () ) -> m () -> Breeding i m g -> Expression g m p -> Objective p m i -> m [i] -> IO (m [i])
+runEA :: (Monad m) => (m [i] -> IO () ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i -> m [i] -> IO (m [i])
 runEA = runEAUntil (\_ -> False)
 
 -------------------------------------
@@ -111,7 +126,12 @@ instance Neighbourhood Int where
     neighbours size a = [a - size .. a + size]
 
 neighbourGenomes :: (Monad m, Neighbourhood g, Eq g) => Int -> (i -> g) -> Breeding i m g
-neighbourGenomes size gini = return . nub . join . (map ((neighbours size) . gini))
+neighbourGenomes size gini = return . nub . join . map ((neighbours size) . gini)
+
+-- TODO: expression possible d'un breeding: breed en prenant les génomes
+-- voisins des parents rares:
+--
+-- rare `bindB` (thenB neighbourGenomes)
 
 -------------------
 
@@ -121,8 +141,41 @@ neighbourGenomes size gini = return . nub . join . (map ((neighbours size) . gin
 
 ---- Objectives ----
 
-minimise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective p m p
-minimise on keep = return . (take keep) . (sortBy (comparing on) )
+minimise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective m p
+minimise on keep = return . take keep . sortBy (comparing on)
+
+maximise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective m p
+maximise on keep = return . take keep . sortBy (flip $ comparing on)
+
+-- pareto ::
+
+randomSelect :: (Monad m, RandomGen g) => m g -> (g -> m ()) -> Int -> Objective m i
+randomSelect getRandomGen putRandomGen n = \individuals -> 
+--     state (\s -> 
+--         let g = getRandomGState
+--             (g1, g2) = split g
+--             selected = pickElems n g1 individuals
+--         in (selected, setRandomGState s g2))
+    do 
+        g <- getRandomGen 
+        let (g1,g2) = split g
+        putRandomGen g1
+        return $ pickElems n g1 individuals
+
+pickElems :: (RandomGen g) => Int -> g -> [a] -> [a]
+pickElems 0 _ _ = []
+pickElems n g l = 
+    let (i, g1) = randomR (0, length l - 1) g
+        (prefix, elem:suffix) = splitAt i l
+    in elem : pickElems (n - 1) g1 (prefix ++ suffix)
+
+-- diversity :: (Monad m) => 
+
+byNiche :: (Monad m, Ord n) => (i -> n) -> Objective m i -> Objective m i
+byNiche niche o = \individuals -> 
+    let indivsByNiche = Map.elems $ Map.fromListWith (++) [(niche i, [i]) | i <- individuals]
+    in fmap join (mapM o indivsByNiche)
+
 
 --------------------
 
@@ -136,30 +189,26 @@ minimise on keep = return . (take keep) . (sortBy (comparing on) )
 -- de chaque iteration. À chaque iteration, on ajoute à la liste un nouveau
 -- tuple (f, (a,b)) où f donne la fitness du génome (a,b)
 
-test1 :: IO (Writer [(Int,(Int,Int))] [(Int,Int)])
+test1 :: IO (Writer (Sum Int) [(Int,(Int,Int))])
 test1 = 
     runEAUntil
-        -- condition d'arrêt: la dernière meilleure fitness = 0
-        ( \mpop -> let (_, bests) = runWriter mpop
-                  in case bests of 
-                      [] -> False
-                      l -> if ((fst . last) l) == 0 then True else False )
+        -- condition d'arrêt: la meilleure fitness = 0
+        ( \mpop -> let (pop, iter) = runWriter mpop in
+            any (\(f,_) -> f == 0) pop )
         -- affichage: population
-        ( \mpop -> let (pop, _) = runWriter mpop
-                  in putStrLn $ show pop )
+        writeiterpop
         -- step context: rien
-        ( return () )
+        ( tell (Sum 1) )
         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b tel que a < b
         ( bindB 
-            (breedAs fst (neighbourGenomes 1 id))
-            (\as -> (fmap (\bs -> as >>= \a -> bs >>= \b -> if a < b then return (a,b) else [])) . (breedAs snd (neighbourGenomes 1 id)) ) )
+            (breedAs (fst . snd) (neighbourGenomes 1 id))
+            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> if a < b then return (a,b) else []) . breedAs (snd.snd) (neighbourGenomes 1 id) ) )
         -- Expression: la fitness accompagné du génome (abs(a+b), (a,b))
         ( withGenomeE (\(a,b) -> return $ abs (a + b)) ) 
         -- Objective: les génomes correspondant aux 10 plus basses fitnesses
-        ( \ps -> let best = take 100 (sortBy (comparing fst) ps) 
-                 in writer (map snd best, [head best]) ) 
+        ( return . take 10 . sortBy (comparing fst) )
         -- Initial population
-        ( return [(100,100), (-50, 0)] ) -- initial population
+        ( return [(200,(100,100)), (50,(-50, 0))] ) 
 
 -- Composition d'expressions: on veut trouver le couple d'entiers (a,b) qui
 -- minimise à la fois la somme de a et b et leur distance. Il faut donc
@@ -167,69 +216,94 @@ test1 =
 -- tomber sur le couple (0,0). On utilise toujours comme contexte une writer
 -- monad qui enregistre cette fois les deux variables (abssum, absdiff, (a,b)).
 
-test2 :: IO (Writer [(Int, Int, (Int, Int))] [(Int, Int)])
+test2 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
 test2 = 
     runEAUntil
         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
-        ( \mpop -> let (_, bests) = runWriter mpop
-                   in case bests of 
-                      [] -> False
-                      l -> case (last l) of 
-                            (0,0,_) -> True 
-                            _ -> False )
+        ( \mpop -> let (pop, iter) = runWriter mpop in
+            any (\(s,d,_) -> s + d == 0) pop )
         -- affichage: population
         ( \mpop -> let (pop, _) = runWriter mpop
                   in putStrLn $ show pop )
-        -- step context: rien
-        ( return () )
+        -- step context: increment iteration
+        ( tell (Sum 1) )
         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
         ( bindB 
-            (breedAs fst (neighbourGenomes 1 id))
-            (\as -> (fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) )) . (breedAs snd (neighbourGenomes 1 id)) ) )
+            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
+            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
         -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
         ( bindE
             (\(a,b) -> return $ abs(a + b))
             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
         -- Objective: les génomes correspondant aux 10 plus basses fitnesses abssum + absdiff
-        ( \ps -> let best = take 10 (sortBy (comparing $ \(s,d,_) -> s + d) ps) 
-                 in writer (map (\(_,_,x) -> x) best, [head best]) ) 
+        ( return . take 10 . sortBy (comparing $ \(s,d,_) -> s + d) ) 
         -- Initial population
-        ( return [(100,100), (-100, 50), (-50, -100), (-100, -100)] ) -- initial population
-    
+        ( return [(200,0,(100,100)), 
+                  (50,50,(-100, 50)), 
+                  (150,50,(-50, -100)), 
+                  (200,0,(-100, -100))] )
+
 -- Composition d'objectifs: 2 objectifs d'optimisation: minimiser abssum et minimiser absdiff
 
-test3 :: IO (Writer [(Int, Int, (Int, Int))] [(Int, Int)])
+test3 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
 test3 =
     runEAUntil
         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
-        ( \mpop -> let (_, bests) = runWriter mpop
-                   in case bests of 
-                      [] -> False
-                      l -> case (last l) of 
-                            (0,0,_) -> True 
-                            _ -> False )
+        ( \mpop -> let (pop, iter) = runWriter mpop in
+            any (\(s,d,_) -> s + d == 0) pop )
         -- affichage: population
-        ( \mpop -> let (pop, _) = runWriter mpop
-                  in putStrLn $ show pop )
-        -- step context: rien
-        ( return () )
+        writeiterpop
+        -- ( \mpop -> let (pop, _) = runWriter mpop
+        --           in putStrLn $ show pop )
+        -- step context: increment iteration
+        ( tell (Sum 1) )
         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
         ( bindB 
-            (breedAs fst (neighbourGenomes 1 id))
-            (\as -> (fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) )) . (breedAs snd (neighbourGenomes 1 id)) ) )
+            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
+            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
         -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
         ( bindE
             (\(a,b) -> return $ abs(a + b))
             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
         -- Objective: garder 5 meilleurs individus pour chaque critère
-        ( \ps -> let best = take 10 (sortBy (comparing $ \(s,d,_) -> s + d) ps) 
-                in writer (map (\(_,_,x) -> x) best, [head best]) ) 
-        -- ( bindO 
-        --    (minimise (\(s,_,_) -> s) 5) 
-        --    (\selected1s -> (fmap (union selected1s)) . (minimise (\(_,d,_) -> d) 5)) )
+        ( bindO 
+            (minimise (\(s,_,_) -> s) 5) 
+            (thenO (minimise (\(_,d,_) -> d) 5)) )
         -- Initial population
-        ( return [(100,100), (-100, 50), (-50, -100), (-100, -100)] ) -- initial population
-        
+        ( return [(200,0,(100,100)), 
+                  (50,50,(-100, 50)), 
+                  (150,50,(-50, -100)), 
+                  (200,0,(-100, -100))] )
+
+-- byNiche 
+
+test4 ::  IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
+test4 =
+    runEAUntil
+        -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
+        ( \mpop -> False ) --let (pop, iter) = runWriter mpop in False )
+            -- any (\(s,d,_) -> s + d == 0) pop )
+        -- affichage: population
+        writeiterpop
+        -- step context: increment iteration
+        (tell (Sum 1))-- ( modify $ \(iter,g) -> (iter + 1, g) )
+        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
+        ( bindB 
+            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
+            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
+        -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
+        ( bindE
+            (\(a,b) -> return $ abs(a + b))
+            (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
+        -- Objective: minimiser s + d dans chaque niche
+        ( byNiche (\(s,d,_) -> let n = div d 10 in if n < 0 then 0 else if n > 10 then 10 else n) $ minimise (\(s,d,_) -> s + d) 1 ) 
+        -- Initial population
+        ( return [(200,0,(100,100)), 
+                  (50,50,(-100, 50)), 
+                  (150,50,(-50, -100)), 
+                  (200,0,(-100, -100))] )
 
 ------------------
+
+
 
