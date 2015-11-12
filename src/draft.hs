@@ -93,12 +93,27 @@ stepEA stepContext breeding expression objective pop = do
 
 runEAUntil :: (Monad m) => (m [i] -> Bool) -> (m [i] -> IO () ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i  -> m [i] -> IO (m [i])
 runEAUntil stopCondition outputF stepContext b e o mpop = do
-   if (stopCondition mpop)
-   then return mpop
-   else do
-       outputF mpop
-       let newmpop = mpop >>= (stepEA stepContext b e o)
-       runEAUntil stopCondition outputF stepContext b e o newmpop
+    if (stopCondition mpop)
+    then return mpop
+    else do
+        outputF mpop
+        let newmpop = mpop >>= (stepEA stepContext b e o)
+        runEAUntil stopCondition outputF stepContext b e o newmpop
+
+-- comment transformer n (m a) en t (n a)? For example, IO (Maybe a) en MaybeT IO a
+--
+-- comment enchainer les monades m dans une fonction f :: IO (m a) -> IO (m b) -> IO (m c)
+        
+runEAUntil' :: ( Monad m, Traversable m ) => ([i] -> m Bool) -> ( [i] -> m (IO ()) ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> IO (m [i])
+runEAUntil' stopCondition output stepContext b e o pop = do
+    (fmap join . sequence) $ do 
+        output pop
+        stop <- stopCondition pop
+        if stop
+        then (return . return . return) pop
+        else do
+            newpop <- stepEA stepContext b e o pop
+            return $ runEAUntil' stopCondition output stepContext b e o newpop
 
 runEA :: (Monad m) => (m [i] -> IO () ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i -> m [i] -> IO (m [i])
 runEA = runEAUntil (\_ -> False)
@@ -110,10 +125,13 @@ runEA = runEAUntil (\_ -> False)
 writempop :: (Show m) => m -> IO ()
 writempop mpop = putStrLn $ "Pop " ++ show mpop
 
+writepop' :: (Monad m, Show i) => [i] -> m (IO ())
+writepop' pop = do
+    return $ putStrLn $ "Pop " ++ show pop
+
 writeiterpop :: (Show i) => Writer (Sum Int) [i] -> IO ()
-writeiterpop mpop = 
-    let (pop,Sum iter) = runWriter mpop 
-    in putStrLn $ "Iter " ++ (show iter) ++ " Pop " ++ (show pop)
+writeiterpop mpop = let (pop, Sum iter) = runWriter mpop
+                    in putStrLn $ "Iter " ++ (show iter) ++ " Pop " ++ (show pop)
 
 ------------------------------------------------------
 
@@ -277,33 +295,35 @@ test3 =
 
 -- byNiche 
 
-test4 ::  IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
-test4 =
-    runEAUntil
-        -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
-        ( \mpop -> False ) --let (pop, iter) = runWriter mpop in False )
-            -- any (\(s,d,_) -> s + d == 0) pop )
-        -- affichage: population
-        writeiterpop
-        -- step context: increment iteration
-        (tell (Sum 1))-- ( modify $ \(iter,g) -> (iter + 1, g) )
-        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
-        ( bindB 
-            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
-            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
-        -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
-        ( bindE
-            (\(a,b) -> return $ abs(a + b))
-            (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
-        -- Objective: minimiser s + d dans chaque niche
-        ( byNiche (\(s,d,_) -> let n = div d 10 in if n < 0 then 0 else if n > 10 then 10 else n) $ minimise (\(s,d,_) -> s + d) 1 ) 
-        -- Initial population
-        ( return [(200,0,(100,100)), 
-                  (50,50,(-100, 50)), 
-                  (150,50,(-50, -100)), 
-                  (200,0,(-100, -100))] )
-
+-- test4 ::  IO (State (Int, StdGen) [(Int, Int, (Int, Int))])
+-- test4 =
+--     runEAUntil
+--         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
+--         ( \mpop -> False ) --let (pop, iter) = runWriter mpop in False )
+--             -- any (\(s,d,_) -> s + d == 0) pop )
+--         -- affichage: population
+--         ( \mpop -> let (pop, (iter, g)) = runState mpop
+--                   in putStrLn $ "Iter " ++ show iter ++ " g " ++ show g ++ " " ++ show pop )
+--         -- step context: increment iteration
+--         ( modify $ \(iter,g) -> (iter + 1, g) )
+--         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
+--         ( bindB 
+--             (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
+--             (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
+--         -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
+--         ( bindE
+--             (\(a,b) -> return $ abs(a + b))
+--             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
+--         -- Objective: minimiser s + d dans chaque niche
+--         ( byNiche (\(s,d,_) -> let n = div d 10 in if n < 0 then 0 else if n > 10 then 10 else n) $ randomSelect (gets snd) (\newg -> modify $ \(a,g) -> (a, newg)) 1 ) 
+--         -- Initial population
+--         ( return [(200,0,(100,100)), 
+--                   (50,50,(-100, 50)), 
+--                   (150,50,(-50, -100)), 
+--                   (200,0,(-100, -100))] )
+-- 
 ------------------
 
-
-
+main :: IO ()
+main = do
+  putStrLn "hello world"
