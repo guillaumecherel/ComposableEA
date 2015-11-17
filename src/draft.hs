@@ -91,47 +91,31 @@ stepEA stepContext breeding expression objective pop = do
     expressed <- mapM expression breeded --mapM est l'étape parallelisable
     objective expressed
 
-runEAUntil :: (Monad m) => (m [i] -> Bool) -> (m [i] -> IO () ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i  -> m [i] -> IO (m [i])
-runEAUntil stopCondition outputF stepContext b e o mpop = do
-    if (stopCondition mpop)
-    then return mpop
-    else do
-        outputF mpop
-        let newmpop = mpop >>= (stepEA stepContext b e o)
-        runEAUntil stopCondition outputF stepContext b e o newmpop
-
--- comment transformer n (m a) en t (n a)? For example, IO (Maybe a) en MaybeT IO a
---
--- comment enchainer les monades m dans une fonction f :: IO (m a) -> IO (m b) -> IO (m c)
-        
-runEAUntil' :: ( Monad m, Traversable m ) => ([i] -> m Bool) -> ( [i] -> m (IO ()) ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> IO (m [i])
-runEAUntil' stopCondition output stepContext b e o pop = do
+runEAUntil :: ( Monad m, Traversable m ) => ([i] -> m Bool) -> ( [i] -> m (IO ()) ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> IO (m [i])
+runEAUntil stopCondition output stepContext b e o pop = do
+    mio <- sequence (output pop)
     (fmap join . sequence) $ do 
-        output pop
         stop <- stopCondition pop
         if stop
         then (return . return . return) pop
         else do
             newpop <- stepEA stepContext b e o pop
-            return $ runEAUntil' stopCondition output stepContext b e o newpop
+            return $ runEAUntil stopCondition output stepContext b e o newpop
 
-runEA :: (Monad m) => (m [i] -> IO () ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i -> m [i] -> IO (m [i])
-runEA = runEAUntil (\_ -> False)
+runEA :: (Monad m, Traversable m) => ([i] -> m (IO ())) -> m () -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> IO (m [i])
+runEA = runEAUntil (\_ -> return False)
 
 -------------------------------------
 
 ---- Functions for displaying things at each step ----
 
-writempop :: (Show m) => m -> IO ()
-writempop mpop = putStrLn $ "Pop " ++ show mpop
+writepop :: (Monad m, Show i) => [i] -> m (IO ())
+writepop pop = return $ putStrLn $ "Pop " ++ show pop
 
-writepop' :: (Monad m, Show i) => [i] -> m (IO ())
-writepop' pop = do
-    return $ putStrLn $ "Pop " ++ show pop
-
-writeiterpop :: (Show i) => Writer (Sum Int) [i] -> IO ()
-writeiterpop mpop = let (pop, Sum iter) = runWriter mpop
-                    in putStrLn $ "Iter " ++ (show iter) ++ " Pop " ++ (show pop)
+writeiterpop :: (Show i) => [i] -> Writer (Sum Int) (IO ())
+writeiterpop pop = do
+    (_, Sum iter) <- listen (return ())    
+    return $ putStrLn $ "Iter " ++ (show iter) ++ " Pop " ++ (show pop)
 
 ------------------------------------------------------
 
@@ -211,8 +195,9 @@ test1 :: IO (Writer (Sum Int) [(Int,(Int,Int))])
 test1 = 
     runEAUntil
         -- condition d'arrêt: la meilleure fitness = 0
-        ( \mpop -> let (pop, iter) = runWriter mpop in
-            any (\(f,_) -> f == 0) pop )
+        ( \pop -> --let (pop, iter) = runWriter mpop in
+            --any (\(f,_) -> f == 0) pop )
+            return $ any (\(f, _) -> f == 0) pop )
         -- affichage: population
         writeiterpop
         -- step context: rien
@@ -226,7 +211,7 @@ test1 =
         -- Objective: les génomes correspondant aux 10 plus basses fitnesses
         ( return . take 10 . sortBy (comparing fst) )
         -- Initial population
-        ( return [(200,(100,100)), (50,(-50, 0))] ) 
+        [(200,(100,100)), (50,(-50, 0))]
 
 -- Composition d'expressions: on veut trouver le couple d'entiers (a,b) qui
 -- minimise à la fois la somme de a et b et leur distance. Il faut donc
@@ -238,11 +223,9 @@ test2 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
 test2 = 
     runEAUntil
         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
-        ( \mpop -> let (pop, iter) = runWriter mpop in
-            any (\(s,d,_) -> s + d == 0) pop )
+        ( \pop -> return $ any (\(s,d,_) -> s + d == 0) pop )
         -- affichage: population
-        ( \mpop -> let (pop, _) = runWriter mpop
-                  in putStrLn $ show pop )
+        writepop
         -- step context: increment iteration
         ( tell (Sum 1) )
         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
@@ -256,10 +239,10 @@ test2 =
         -- Objective: les génomes correspondant aux 10 plus basses fitnesses abssum + absdiff
         ( return . take 10 . sortBy (comparing $ \(s,d,_) -> s + d) ) 
         -- Initial population
-        ( return [(200,0,(100,100)), 
-                  (50,50,(-100, 50)), 
-                  (150,50,(-50, -100)), 
-                  (200,0,(-100, -100))] )
+        [(200,0,(100,100)), 
+         (50,50,(-100, 50)), 
+         (150,50,(-50, -100)), 
+         (200,0,(-100, -100))]
 
 -- Composition d'objectifs: 2 objectifs d'optimisation: minimiser abssum et minimiser absdiff
 
@@ -267,12 +250,9 @@ test3 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
 test3 =
     runEAUntil
         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
-        ( \mpop -> let (pop, iter) = runWriter mpop in
-            any (\(s,d,_) -> s + d == 0) pop )
+        ( \pop -> return $ any (\(s,d,_) -> s + d == 0) pop )
         -- affichage: population
         writeiterpop
-        -- ( \mpop -> let (pop, _) = runWriter mpop
-        --           in putStrLn $ show pop )
         -- step context: increment iteration
         ( tell (Sum 1) )
         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
@@ -288,10 +268,10 @@ test3 =
             (minimise (\(s,_,_) -> s) 5) 
             (thenO (minimise (\(_,d,_) -> d) 5)) )
         -- Initial population
-        ( return [(200,0,(100,100)), 
-                  (50,50,(-100, 50)), 
-                  (150,50,(-50, -100)), 
-                  (200,0,(-100, -100))] )
+        [(200,0,(100,100)), 
+         (50,50,(-100, 50)), 
+         (150,50,(-50, -100)), 
+         (200,0,(-100, -100))]
 
 -- byNiche 
 
@@ -299,11 +279,12 @@ test3 =
 -- test4 =
 --     runEAUntil
 --         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
---         ( \mpop -> False ) --let (pop, iter) = runWriter mpop in False )
+--         ( \pop -> return False ) 
 --             -- any (\(s,d,_) -> s + d == 0) pop )
 --         -- affichage: population
---         ( \mpop -> let (pop, (iter, g)) = runState mpop
---                   in putStrLn $ "Iter " ++ show iter ++ " g " ++ show g ++ " " ++ show pop )
+--         ( \pop -> do
+--             (iter, g) <- get 
+--             return $ putStrLn $ "Iter " ++ show iter ++ " g " ++ show g ++ " " ++ show pop )
 --         -- step context: increment iteration
 --         ( modify $ \(iter,g) -> (iter + 1, g) )
 --         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
@@ -317,11 +298,11 @@ test3 =
 --         -- Objective: minimiser s + d dans chaque niche
 --         ( byNiche (\(s,d,_) -> let n = div d 10 in if n < 0 then 0 else if n > 10 then 10 else n) $ randomSelect (gets snd) (\newg -> modify $ \(a,g) -> (a, newg)) 1 ) 
 --         -- Initial population
---         ( return [(200,0,(100,100)), 
---                   (50,50,(-100, 50)), 
---                   (150,50,(-50, -100)), 
---                   (200,0,(-100, -100))] )
--- 
+--         [(200,0,(100,100)), 
+--          (50,50,(-100, 50)), 
+--          (150,50,(-50, -100)), 
+--          (200,0,(-100, -100))]
+
 ------------------
 
 main :: IO ()
