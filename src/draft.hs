@@ -216,37 +216,43 @@ test1 =
 runTest1 :: IO ([(Int,(Int,Int))], Int)
 runTest1 = runStateT test1 0
 
--- -- Composition d'expressions: on veut trouver le couple d'entiers (a,b) qui
--- -- minimise à la fois la somme de a et b et leur distance. Il faut donc
--- -- exprimer 2 variables à partir d'un génome: abs(a+b) et abs(a-b). On devrait
--- -- tomber sur le couple (0,0). On utilise toujours comme contexte une writer
--- -- monad qui enregistre cette fois les deux variables (abssum, absdiff, (a,b)).
--- 
--- test2 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
--- test2 = 
---     runEAUntil
---         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
---         ( \pop -> return $ any (\(s,d,_) -> s + d == 0) pop )
---         -- affichage: population
---         writepop
---         -- step context: increment iteration
---         ( tell (Sum 1) )
---         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
---         ( bindB 
---             (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
---             (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
---         -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
---         ( bindE
---             (\(a,b) -> return $ abs(a + b))
---             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
---         -- Objective: les génomes correspondant aux 10 plus basses fitnesses abssum + absdiff
---         ( return . take 10 . sortBy (comparing $ \(s,d,_) -> s + d) ) 
---         -- Initial population
---         [(200,0,(100,100)), 
---          (50,50,(-100, 50)), 
---          (150,50,(-50, -100)), 
---          (200,0,(-100, -100))]
--- 
+-- Composition d'expressions: on veut trouver le couple d'entiers (a,b) qui
+-- minimise à la fois la somme de a et b et leur distance. Il faut donc
+-- exprimer 2 variables à partir d'un génome: abs(a+b) et abs(a-b). On devrait
+-- tomber sur le couple (0,0). On utilise toujours comme contexte une writer
+-- monad qui enregistre cette fois les deux variables (abssum, absdiff, (a,b)).
+
+test2 :: StateT Int IO [(Int, Int, (Int, Int))] -- IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
+test2 = 
+    runEAUntil
+        -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
+        ( \pop -> (lift . return) $ any (\(s,d,_) -> s + d == 0) pop )
+        -- step context: increment iteration
+        ( \pop -> do 
+            -- affichage population
+            iter <- get
+            lift $ putStrLn $ "iter " ++ (show iter) ++ " " ++ (show pop)
+            -- increment iteration
+            put (iter + 1) )
+        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
+        ( bindB 
+            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
+            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
+        -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
+        ( bindE
+            (\(a,b) -> return $ abs(a + b))
+            (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
+        -- Objective: les génomes correspondant aux 10 plus basses fitnesses abssum + absdiff
+        ( return . take 10 . sortBy (comparing $ \(s,d,_) -> s + d) ) 
+        -- Initial population
+        [(200,0,(100,100)), 
+         (50,50,(-100, 50)), 
+         (150,50,(-50, -100)), 
+         (200,0,(-100, -100))]
+
+runTest2 :: IO ([(Int, Int, (Int, Int))], Int)
+runTest2 = runStateT test2 0
+
 -- -- Composition d'objectifs: 2 objectifs d'optimisation: minimiser abssum et minimiser absdiff
 -- 
 -- test3 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
