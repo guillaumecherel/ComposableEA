@@ -193,9 +193,7 @@ test1 :: StateT Int IO [(Int,(Int,Int))]
 test1 = 
     runEAUntil
         -- condition d'arrêt: la meilleure fitness = 0
-        ( \pop -> --let (pop, iter) = runWriter mpop in
-            --any (\(f,_) -> f == 0) pop )
-            (lift . return) $ (any (\(f, _) -> f == 0) pop) )
+        ( \pop -> (lift . return) $ (any (\(f, _) -> f == 0) pop) )
         ( \pop -> do 
             -- affichage population
             iter <- get
@@ -253,35 +251,41 @@ test2 =
 runTest2 :: IO ([(Int, Int, (Int, Int))], Int)
 runTest2 = runStateT test2 0
 
--- -- Composition d'objectifs: 2 objectifs d'optimisation: minimiser abssum et minimiser absdiff
--- 
--- test3 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
--- test3 =
---     runEAUntil
---         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
---         ( \pop -> return $ any (\(s,d,_) -> s + d == 0) pop )
---         -- affichage: population
---         writeiterpop
---         -- step context: increment iteration
---         ( tell (Sum 1) )
---         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
---         ( bindB 
---             (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
---             (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
---         -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
---         ( bindE
---             (\(a,b) -> return $ abs(a + b))
---             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
---         -- Objective: garder 5 meilleurs individus pour chaque critère
---         ( bindO 
---             (minimise (\(s,_,_) -> s) 5) 
---             (thenO (minimise (\(_,d,_) -> d) 5)) )
---         -- Initial population
---         [(200,0,(100,100)), 
---          (50,50,(-100, 50)), 
---          (150,50,(-50, -100)), 
---          (200,0,(-100, -100))]
--- 
+-- Composition d'objectifs: 2 objectifs d'optimisation: minimiser abssum et minimiser absdiff
+
+test3 :: StateT Int IO [(Int, Int, (Int, Int))]
+test3 =
+    runEAUntil
+        -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
+        ( \pop -> (lift . return) $ any (\(s,d,_) -> s + d == 0) pop )
+        -- step context: increment iteration
+        ( \pop -> do 
+            -- affichage population
+            iter <- get
+            lift $ putStrLn $ "iter " ++ (show iter) ++ " " ++ (show pop)
+            -- increment iteration
+            put (iter + 1) )
+        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
+        ( bindB 
+            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
+            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
+        -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
+        ( bindE
+            (\(a,b) -> return $ abs(a + b))
+            (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
+        -- Objective: garder 5 meilleurs individus pour chaque critère
+        ( bindO 
+            (minimise (\(s,_,_) -> s) 5) 
+            (thenO (minimise (\(_,d,_) -> d) 5)) )
+        -- Initial population
+        [(200,0,(100,100)), 
+         (50,50,(-100, 50)), 
+         (150,50,(-50, -100)), 
+         (200,0,(-100, -100))]
+
+runTest3 :: IO ([(Int, Int, (Int, Int))], Int)
+runTest3 = runStateT test3 0
+
 -- byNiche 
 
 -- test4 ::  IO (State (Int, StdGen) [(Int, Int, (Int, Int))])
