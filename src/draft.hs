@@ -84,25 +84,23 @@ thenO o selected1s _ = o selected1s
 
 ---- Functions for running an EA ----
 
-stepEA :: (Monad m) => m () -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
-stepEA stepContext breeding expression objective pop = do
-    stepContext
+stepEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
+stepEA preStep breeding expression objective pop = do
+    preStep pop
     breeded <- breeding pop
     expressed <- mapM expression breeded --mapM est l'étape parallelisable
     objective expressed
 
-runEAUntil :: ( Monad m, Traversable m ) => ([i] -> m Bool) -> ( [i] -> m (IO ()) ) -> m () -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> IO (m [i])
-runEAUntil stopCondition output stepContext b e o pop = do
-    mio <- sequence (output pop)
-    (fmap join . sequence) $ do 
-        stop <- stopCondition pop
-        if stop
-        then (return . return . return) pop
-        else do
-            newpop <- stepEA stepContext b e o pop
-            return $ runEAUntil stopCondition output stepContext b e o newpop
+runEAUntil :: ( Monad m ) => ([i] -> m Bool) -> ( [i] -> m () ) -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
+runEAUntil stopCondition preStep b e o pop = do
+    stop <- stopCondition pop
+    if stop
+    then return pop
+    else do
+        newpop <- stepEA preStep b e o pop
+        runEAUntil stopCondition preStep b e o newpop
 
-runEA :: (Monad m, Traversable m) => ([i] -> m (IO ())) -> m () -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> IO (m [i])
+runEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
 runEA = runEAUntil (\_ -> return False)
 
 -------------------------------------
@@ -191,17 +189,19 @@ byNiche niche o = \individuals ->
 -- de chaque iteration. À chaque iteration, on ajoute à la liste un nouveau
 -- tuple (f, (a,b)) où f donne la fitness du génome (a,b)
 
-test1 :: IO (Writer (Sum Int) [(Int,(Int,Int))])
+test1 :: StateT Int IO [(Int,(Int,Int))]
 test1 = 
     runEAUntil
         -- condition d'arrêt: la meilleure fitness = 0
         ( \pop -> --let (pop, iter) = runWriter mpop in
             --any (\(f,_) -> f == 0) pop )
-            return $ any (\(f, _) -> f == 0) pop )
-        -- affichage: population
-        writeiterpop
-        -- step context: rien
-        ( tell (Sum 1) )
+            (lift . return) $ (any (\(f, _) -> f == 0) pop) )
+        ( \pop -> do 
+            -- affichage population
+            iter <- get
+            lift $ putStrLn $ "iter " ++ (show iter) ++ " " ++ (show pop)
+            -- increment iteration
+            put (iter + 1) )
         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b tel que a < b
         ( bindB 
             (breedAs (fst . snd) (neighbourGenomes 1 id))
@@ -213,66 +213,69 @@ test1 =
         -- Initial population
         [(200,(100,100)), (50,(-50, 0))]
 
--- Composition d'expressions: on veut trouver le couple d'entiers (a,b) qui
--- minimise à la fois la somme de a et b et leur distance. Il faut donc
--- exprimer 2 variables à partir d'un génome: abs(a+b) et abs(a-b). On devrait
--- tomber sur le couple (0,0). On utilise toujours comme contexte une writer
--- monad qui enregistre cette fois les deux variables (abssum, absdiff, (a,b)).
+runTest1 :: IO ([(Int,(Int,Int))], Int)
+runTest1 = runStateT test1 0
 
-test2 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
-test2 = 
-    runEAUntil
-        -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
-        ( \pop -> return $ any (\(s,d,_) -> s + d == 0) pop )
-        -- affichage: population
-        writepop
-        -- step context: increment iteration
-        ( tell (Sum 1) )
-        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
-        ( bindB 
-            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
-            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
-        -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
-        ( bindE
-            (\(a,b) -> return $ abs(a + b))
-            (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
-        -- Objective: les génomes correspondant aux 10 plus basses fitnesses abssum + absdiff
-        ( return . take 10 . sortBy (comparing $ \(s,d,_) -> s + d) ) 
-        -- Initial population
-        [(200,0,(100,100)), 
-         (50,50,(-100, 50)), 
-         (150,50,(-50, -100)), 
-         (200,0,(-100, -100))]
-
--- Composition d'objectifs: 2 objectifs d'optimisation: minimiser abssum et minimiser absdiff
-
-test3 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
-test3 =
-    runEAUntil
-        -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
-        ( \pop -> return $ any (\(s,d,_) -> s + d == 0) pop )
-        -- affichage: population
-        writeiterpop
-        -- step context: increment iteration
-        ( tell (Sum 1) )
-        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
-        ( bindB 
-            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
-            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
-        -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
-        ( bindE
-            (\(a,b) -> return $ abs(a + b))
-            (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
-        -- Objective: garder 5 meilleurs individus pour chaque critère
-        ( bindO 
-            (minimise (\(s,_,_) -> s) 5) 
-            (thenO (minimise (\(_,d,_) -> d) 5)) )
-        -- Initial population
-        [(200,0,(100,100)), 
-         (50,50,(-100, 50)), 
-         (150,50,(-50, -100)), 
-         (200,0,(-100, -100))]
-
+-- -- Composition d'expressions: on veut trouver le couple d'entiers (a,b) qui
+-- -- minimise à la fois la somme de a et b et leur distance. Il faut donc
+-- -- exprimer 2 variables à partir d'un génome: abs(a+b) et abs(a-b). On devrait
+-- -- tomber sur le couple (0,0). On utilise toujours comme contexte une writer
+-- -- monad qui enregistre cette fois les deux variables (abssum, absdiff, (a,b)).
+-- 
+-- test2 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
+-- test2 = 
+--     runEAUntil
+--         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
+--         ( \pop -> return $ any (\(s,d,_) -> s + d == 0) pop )
+--         -- affichage: population
+--         writepop
+--         -- step context: increment iteration
+--         ( tell (Sum 1) )
+--         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
+--         ( bindB 
+--             (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
+--             (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
+--         -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
+--         ( bindE
+--             (\(a,b) -> return $ abs(a + b))
+--             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
+--         -- Objective: les génomes correspondant aux 10 plus basses fitnesses abssum + absdiff
+--         ( return . take 10 . sortBy (comparing $ \(s,d,_) -> s + d) ) 
+--         -- Initial population
+--         [(200,0,(100,100)), 
+--          (50,50,(-100, 50)), 
+--          (150,50,(-50, -100)), 
+--          (200,0,(-100, -100))]
+-- 
+-- -- Composition d'objectifs: 2 objectifs d'optimisation: minimiser abssum et minimiser absdiff
+-- 
+-- test3 :: IO (Writer (Sum Int) [(Int, Int, (Int, Int))])
+-- test3 =
+--     runEAUntil
+--         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
+--         ( \pop -> return $ any (\(s,d,_) -> s + d == 0) pop )
+--         -- affichage: population
+--         writeiterpop
+--         -- step context: increment iteration
+--         ( tell (Sum 1) )
+--         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
+--         ( bindB 
+--             (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
+--             (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
+--         -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
+--         ( bindE
+--             (\(a,b) -> return $ abs(a + b))
+--             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
+--         -- Objective: garder 5 meilleurs individus pour chaque critère
+--         ( bindO 
+--             (minimise (\(s,_,_) -> s) 5) 
+--             (thenO (minimise (\(_,d,_) -> d) 5)) )
+--         -- Initial population
+--         [(200,0,(100,100)), 
+--          (50,50,(-100, 50)), 
+--          (150,50,(-50, -100)), 
+--          (200,0,(-100, -100))]
+-- 
 -- byNiche 
 
 -- test4 ::  IO (State (Int, StdGen) [(Int, Int, (Int, Int))])
