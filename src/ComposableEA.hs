@@ -5,13 +5,8 @@ module ComposableEA where
 import Data.Ord
 import Data.List
 import qualified Data.Map.Strict as Map
-import Control.Lens
 import System.Random
-import Control.Monad.Identity
-import Control.Monad.Trans
-import Control.Monad.Writer
-import Control.Monad.State
-import Data.Monoid
+import Control.Monad
 
 -- TODO: enlever les duplicats dans la composition de breedings
 
@@ -112,11 +107,6 @@ runEA = runEAUntil (\_ -> return False)
 writepop :: (Monad m, Show i) => [i] -> m (IO ())
 writepop pop = return $ putStrLn $ "Pop " ++ show pop
 
-writeiterpop :: (Show i) => [i] -> Writer (Sum Int) (IO ())
-writeiterpop pop = do
-    (_, Sum iter) <- listen (return ())    
-    return $ putStrLn $ "Iter " ++ (show iter) ++ " Pop " ++ (show pop)
-
 ------------------------------------------------------
 
 ---- Breedings ----
@@ -152,17 +142,11 @@ maximise on keep = return . take keep . sortBy (flip $ comparing on)
 -- pareto ::
 
 randomSelect :: (Monad m, RandomGen g) => m g -> (g -> m ()) -> Int -> Objective m i
-randomSelect getRandomGen putRandomGen n = \individuals -> 
---     state (\s -> 
---         let g = getRandomGState
---             (g1, g2) = split g
---             selected = pickElems n g1 individuals
---         in (selected, setRandomGState s g2))
-    do 
-        g <- getRandomGen 
-        let (g1,g2) = split g
-        putRandomGen g1
-        return $ pickElems n g1 individuals
+randomSelect getRandomGen putRandomGen n = \individuals -> do
+    g <- getRandomGen 
+    let (g1,g2) = split g
+    putRandomGen g1
+    return $ pickElems n g1 individuals
 
 pickElems :: (RandomGen g) => Int -> g -> [a] -> [a]
 pickElems 0 _ _ = []

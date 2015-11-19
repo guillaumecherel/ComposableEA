@@ -2,14 +2,8 @@ module Examples where
 
 import Data.Ord
 import Data.List
-import qualified Data.Map.Strict as Map
-import Control.Lens
 import System.Random
-import Control.Monad.Identity
-import Control.Monad.Trans
-import Control.Monad.Writer
 import Control.Monad.State
-import Data.Monoid
 
 import ComposableEA
 
