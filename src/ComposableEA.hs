@@ -14,7 +14,7 @@ import Control.Monad
 
 type Breeding i m g = [i] -> m [g]
 
--- C'est l'étape distribuée en parallèle (équivalent à évaluation dans mgo).
+-- Expression: C'est l'étape distribuée en parallèle (équivalent à évaluation dans mgo).
 -- Elle ne fait pas intervenir la monad m qui contient l'état de l'évolution
 -- car cet état peut avoir besoin d'être synchronisé entre les différents
 -- éléments évalués. La mise à jour de l'état devra donc être traité à une
@@ -26,9 +26,9 @@ type Expression g m i = g -> m i
 
 type Objective m i = [i] -> m [i]
 
-------------------------------------------------------------
 
----- Composition functions ----
+
+---- Composition functions: Breeding ----
 
 bindB :: (Monad m) => Breeding i m g1 -> ([g1] -> Breeding i m g2) -> Breeding i m g2
 bindB b1 b2 = \individuals -> do
@@ -38,8 +38,7 @@ bindB b1 b2 = \individuals -> do
 breedAs :: (i -> i1) -> Breeding i1 m g1 -> Breeding i m g1
 breedAs itoi1 b = b . fmap itoi1
 
--- zipBindB :: (Monad m) => ([g1] -> Breeding i m g2) -> ([g1] -> Breeding ig1 (, g2) m) 
--- zipBindB b2 = \g1s indivs -> fmap (zip g1s) (b2 g1s indivs) 
+---- Composition functions: Expression ----
 
 bindE :: (Monad m) => Expression g m p1 -> (p1 -> Expression g m p2) -> Expression g m p2
 bindE e1 e2 = \genome -> do
@@ -52,6 +51,10 @@ expressAs gtog1 e = e . gtog1
 withGenomeE :: (Monad m) => Expression g m p -> Expression g m (p,g)
 withGenomeE express = \g -> (express g) >>= \p -> return (p, g)
 -- withGenomeE express = bindE (return . id) (\g -> (fmap (\p -> (p,g))) . express )
+
+
+
+---- Composition functions: Objective ----
 
 bindO :: (Monad m) => Objective m i -> ([i] -> Objective m i) -> Objective m i
 bindO o1 o2 = \phenotypes -> do
@@ -75,11 +78,8 @@ thenO :: (Monad m) => Objective m i -> [i] -> Objective m i
 thenO o selected1s _ = o selected1s
 
 
--- o1 `bindO` (thenO o2) `bindO` byNiche
 
--------------------------------
-
----- Functions for running an EA ----
+---- Functions for running the EA ----
 
 stepEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
 stepEA preStep breeding expression objective pop = do
@@ -100,14 +100,14 @@ runEAUntil stopCondition preStep b e o pop = do
 runEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
 runEA = runEAUntil (\_ -> return False)
 
--------------------------------------
+
 
 ---- Functions for displaying things at each step ----
 
 writepop :: (Monad m, Show i) => [i] -> m (IO ())
 writepop pop = return $ putStrLn $ "Pop " ++ show pop
 
-------------------------------------------------------
+
 
 ---- Breedings ----
 
@@ -120,16 +120,11 @@ instance Neighbourhood Int where
 neighbourGenomes :: (Monad m, Neighbourhood g, Eq g) => Int -> (i -> g) -> Breeding i m g
 neighbourGenomes size gini = return . nub . join . map ((neighbours size) . gini)
 
--- TODO: expression possible d'un breeding: breed en prenant les génomes
--- voisins des parents rares:
---
--- rare `bindB` (thenB neighbourGenomes)
 
--------------------
 
 ---- Expressions ----
 
----------------------
+
 
 ---- Objectives ----
 
@@ -139,7 +134,8 @@ minimise on keep = return . take keep . sortBy (comparing on)
 maximise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective m p
 maximise on keep = return . take keep . sortBy (flip $ comparing on)
 
--- pareto ::
+pareto :: (Monad m) => Objective m p
+pareto = undefined
 
 randomSelect :: (Monad m, RandomGen g) => m g -> (g -> m ()) -> Int -> Objective m i
 randomSelect getRandomGen putRandomGen n = \individuals -> do
@@ -162,6 +158,4 @@ byNiche niche o = \individuals ->
     let indivsByNiche = Map.elems $ Map.fromListWith (++) [(niche i, [i]) | i <- individuals]
     in fmap join (mapM o indivsByNiche)
 
-
---------------------
 
