@@ -11,7 +11,44 @@ import Control.Lens
 
 import ComposableEA
 
--- Composition de breedings: trouver un couple d'entiers (a,b) tels que a < b et qui
+
+-- Breedings 
+
+breedInt :: Int -> Breeding Int (StateT EAState IO) Int
+breedInt n individuals = do
+    parents <- randomGroup useRG n 3 individuals
+    offsprings <- oneOfCrossover useRG parents
+    mutated <- mapB (probabilisticMutation useRG 0.5 (stepMutation useRG 3)) offsprings
+    return mutated
+
+breedIntWithin :: Int -> Int -> Int -> Breeding Int (StateT EAState IO) Int
+breedIntWithin minval maxval n individuals = do
+    breeded <- breedInt n individuals
+    return $ map (\x -> min maxval (max x minval)) breeded
+    
+-- Pre-step
+
+showStateAndPop :: (Show s, Show i) => [i] -> StateT s IO ()
+showStateAndPop pop = do
+    s <- get
+    lift $ putStrLn $ "state: " ++ (show s) ++ " pop " ++ (show $ length pop) ++ ": " ++ (show pop)
+
+incrementIter :: Lens' s Int -> [i] -> StateT s IO ()
+incrementIter iterInS pop = do
+    s <- get 
+    let iter = s ^. iterInS
+    put (iterInS .~ (iter + 1) $ s) 
+
+-- Use random number generator
+
+useRG :: StateT (Int, StdGen) IO StdGen
+useRG = do
+    g <- gets snd
+    let (g1,g2) = split g
+    modify (\(a,_) -> (a, g2))
+    return g1
+
+-- Exemple 1 Composition de breedings: trouver un couple d'entiers (a,b) tels que a < b et qui
 -- minimise abs(a + b)
 
 type Genome = (Int,Int)
@@ -46,37 +83,7 @@ test1 =
 runTest1 :: IO ([Individual], EAState)
 runTest1 = runStateT test1 (0, mkStdGen 0)
 
-breedInt :: Int -> Breeding Int (StateT EAState IO) Int
-breedInt n individuals = do
-    parents <- randomGroup useRG n 3 individuals
-    offsprings <- oneOfCrossover useRG parents
-    mutated <- mapB (probabilisticMutation useRG 0.5 (stepMutation useRG 3)) offsprings
-    return mutated
-
-breedIntWithin :: Int -> Int -> Int -> Breeding Int (StateT EAState IO) Int
-breedIntWithin minval maxval n individuals = do
-    breeded <- breedInt n individuals
-    return $ map (\x -> min maxval (max x minval)) breeded
-    
-showStateAndPop :: (Show s, Show i) => [i] -> StateT s IO ()
-showStateAndPop pop = do
-    s <- get
-    lift $ putStrLn $ "state: " ++ (show s) ++ " pop " ++ (show $ length pop) ++ ": " ++ (show pop)
-
-incrementIter :: Lens' s Int -> [i] -> StateT s IO ()
-incrementIter iterInS pop = do
-    s <- get 
-    let iter = s ^. iterInS
-    put (iterInS .~ (iter + 1) $ s) 
-
-useRG :: StateT (Int, StdGen) IO StdGen
-useRG = do
-    g <- gets snd
-    let (g1,g2) = split g
-    modify (\(a,_) -> (a, g2))
-    return g1
-
--- Composition d'expressions: abs(a+b) et abs(a-b).
+-- Exemple 2 Composition d'expressions: abs(a+b) et abs(a-b).
 
 type Individual2 = ((Int, Int),Genome)
 
@@ -108,7 +115,7 @@ test2 =
 runTest2 :: IO ([Individual2], EAState)
 runTest2 = runStateT test2 (0, mkStdGen 0)
 
--- Composition d'objectifs: 2 objectifs d'optimisation l'un à la suite de
+-- Exemple 3 Composition d'objectifs: 2 objectifs d'optimisation l'un à la suite de
 -- l'autre: minimiser abssum et minimiser absdiff
 
 test3 :: StateT EAState IO [Individual2]
@@ -141,7 +148,7 @@ test3 =
 runTest3 :: IO ([Individual2], EAState)
 runTest3 = runStateT test3 (0, mkStdGen 0)
 
--- minimise byNiche 
+-- Exemple 4 minimise byNiche 
 
 
 test4 :: StateT EAState IO [Individual2]
