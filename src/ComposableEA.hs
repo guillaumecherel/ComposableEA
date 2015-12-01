@@ -98,19 +98,6 @@ thenO :: (Monad m) => Objective m i -> Objective m i -> Objective m i
 thenO o1 o2 phenotypes = do
     selected1s <- o1 phenotypes
     o2 selected1s
--- select the i that also respect the second objective 
-
--- andO :: (Monad m, Eq i) => Objective m i -> [i] -> Objective m i
--- andO o =  \selected1s -> fmap (intersect selected1s) . o
--- 
--- orO :: (Monad m, Eq i) => Objective m i -> [i] -> Objective m i
--- orO o =  \selected1s -> fmap (union selected1s) . o
-
--- Not associative
-
--- thenO :: (Monad m) => Objective m i -> [i] -> Objective m i
--- thenO o selected1s _ = o selected1s
-
 
 
 ---- Functions for running the EA ----
