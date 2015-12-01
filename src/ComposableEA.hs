@@ -10,19 +10,9 @@ import Control.Monad
 import qualified Data.Vector as V
 import Control.Lens
 
--- TODO: enlever les duplicats dans la composition de breedings
-
 ---- Types correspondant aux différentes étapes de l'EA ----
 
 type Breeding i m g = [i] -> m [g]
-
--- Expression: C'est l'étape distribuée en parallèle (équivalent à évaluation dans mgo).
--- Elle ne fait pas intervenir la monad m qui contient l'état de l'évolution
--- car cet état peut avoir besoin d'être synchronisé entre les différents
--- éléments évalués. La mise à jour de l'état devra donc être traité à une
--- étape suivante (objective) si besoin Ceci impose la restriction que les
--- expressions des individus ne peut pas dépendre les unes des autres, mais
--- c'est une restriction nécessaire pour le parallelisme.
 
 type Expression g m i = g -> m i 
 
@@ -36,6 +26,15 @@ bindB b1 b2 = \individuals -> do
     g1s <- b1 individuals
     b2 g1s individuals 
 
+zipB :: (Monad m) => Breeding i m g1 -> Breeding i m g2 -> Breeding i m (g1,g2)
+zipB = zipWithB (,)
+
+zipWithB :: (Monad m) => (g1 -> g2 -> g3) -> Breeding i m g1 -> Breeding i m g2 -> Breeding i m g3
+zipWithB f b1 b2 individuals = do
+    g1s <- b1 individuals
+    g2s <- b2 individuals
+    return $ zipWith f g1s g2s
+
 productB :: (Monad m) => Breeding i m g1 -> (g1 -> Breeding i m g2) -> Breeding i m g2
 productB = productWithB (\_ b -> b)
 
@@ -45,14 +44,6 @@ productWithB f b1 b2 individuals = do
     nested <- mapM (\g1 -> (fmap (fmap (f g1))) (b2 g1 individuals)) g1s
     return $ join nested
 
-zipB :: (Monad m) => Breeding i m g1 -> Breeding i m g2 -> Breeding i m (g1,g2)
-zipB = zipWithB (,)
-
-zipWithB :: (Monad m) => (g1 -> g2 -> g3) -> Breeding i m g1 -> Breeding i m g2 -> Breeding i m g3
-zipWithB f b1 b2 individuals = do
-    g1s <- b1 individuals
-    g2s <- b2 individuals
-    return $ zipWith f g1s g2s
 
 ---- Composition functions: Expression ----
 
@@ -69,10 +60,6 @@ zipWithE f e1 e2 genome = do
     expressed1 <- e1 genome
     expressed2 <- e2 genome
     return (f expressed1 expressed2)
-
-expressWith :: (Monad m) => (g -> p) -> Expression g m p
-expressWith f genome = return $ f genome
-
 
 
 ---- Composition functions: Objective ----
@@ -122,12 +109,16 @@ runEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g m i -> Obj
 runEA = runEAUntil (\_ -> return False)
 
 
+---- Common stop conditions ----
 
----- Functions for displaying things at each step ----
+anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
+anyReaches f goal pop = return (any goalReached pop)
+    where goalReached individual = (f individual) == goal
+
+---- Common pre-step functions ----
 
 writepop :: (Monad m, Show i) => [i] -> m (IO ())
 writepop pop = return $ putStrLn $ "Pop " ++ show pop
-
 
 
 ---- Breedings ----
@@ -137,22 +128,15 @@ writepop pop = return $ putStrLn $ "Pop " ++ show pop
 breedAs :: (i -> i1) -> Breeding i1 m g1 -> Breeding i m g1
 breedAs itoi1 b = b . fmap itoi1
 
-mapB :: (Monad m) => (i -> m j) -> Breeding i m j
+mapB :: (Monad m) => (i -> m g) -> Breeding i m g
 mapB mutation individuals = mapM mutation individuals
-
-class Neighbourhood a where
-    neighbours :: Int -> a -> [a]
-
-instance Neighbourhood Int where
-    neighbours size a = [a - size .. a + size]
-
-neighbourGenomes :: (Monad m, Neighbourhood g, Eq g) => Int -> (i -> g) -> Breeding i m g
-neighbourGenomes size gini = return . nub . join . map ((neighbours size) . gini)
 
 byNicheB :: (Monad m, Ord n) => (i -> n) -> Breeding i m g -> Breeding i m g
 byNicheB niche b individuals = 
     let indivsByNiche = Map.elems $ Map.fromListWith (++) [(niche i, [i]) | i <- individuals]
     in fmap join (mapM b indivsByNiche)
+
+-- Breeding building blocks
 
 -- Mating
 
@@ -174,6 +158,7 @@ randomPair useRandomGen paircount individuals = do
                         in (individualsV V.! fst (randomR (0, indivscount - 1) g1), 
                             individualsV V.! fst (randomR (0, indivscount - 1) g2))) gs
 
+
 -- Crossover 
 
 oneOfCrossover :: (Monad m, RandomGen g) => m g -> [[i]] -> m [i]
@@ -184,6 +169,12 @@ oneOfCrossover useRandomGen parents = do
 
 -- Mutation
 
+stepMutation :: (Monad m, RandomGen g, Random i, Num i) => m g -> i -> i -> m i
+stepMutation useRandomGen maxStepSize individual = do
+    g <- useRandomGen
+    let step = fst (randomR (-maxStepSize,maxStepSize) g)
+    return (individual + step)
+
 probabilisticMutation :: (Monad m, RandomGen g) => m g -> Double -> (i -> m i) -> i -> m i
 probabilisticMutation useRandomGen mutateProba mutation individual = do
     g <- useRandomGen
@@ -192,12 +183,6 @@ probabilisticMutation useRandomGen mutateProba mutation individual = do
     then mutation individual
     else return individual
 
-stepMutation :: (Monad m, RandomGen g, Random i, Num i) => m g -> i -> i -> m i
-stepMutation useRandomGen maxStepSize individual = do
-    g <- useRandomGen
-    let step = fst (randomR (-maxStepSize,maxStepSize) g)
-    return (individual + step)
-    -- return $ map (\(indiv,g) -> let step = fst (randomR (-maxStepSize,maxStepSize) g) in indiv + step ) (zip individuals gs)
 
 ---- Expressions ----
 
@@ -209,18 +194,13 @@ expressAs gtog1 e = e . gtog1
 withGenomeE :: (Monad m) => Expression g m p -> Expression g m (p,g)
 withGenomeE express = \g -> (express g) >>= \p -> return (p, g)
 
+expressWith :: (Monad m) => (g -> p) -> Expression g m p
+expressWith f genome = return $ f genome
+
+
 ---- Objectives ----
 
--- Generic functions
-
-objectiveAs :: (Monad m) => (p -> p1) -> (p -> i1 -> i) -> Objective m i1 -> Objective m i
-objectiveAs getp1 seti1 o = undefined -- (fmap (fmap (\(p,i1) -> set p i1))) . ( otup ) . (fmap (\p -> (p,getp1)))
-
 -- Objective building blocks
-
-anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
-anyReaches f goal pop = return (any goalReached pop)
-    where goalReached individual = (f individual) == goal
 
 minimise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective m p
 minimise on keep = return . take keep . sortBy (comparing on)
@@ -242,8 +222,6 @@ pickElems n g l =
     let (i, g1) = randomR (0, length l - 1) g
         (prefix, elem:suffix) = splitAt i l
     in elem : pickElems (n - 1) g1 (prefix ++ suffix)
-
--- diversity :: (Monad m) => 
 
 byNicheO :: (Monad m, Ord n) => (i -> n) -> Objective m i -> Objective m i
 byNicheO niche o = \individuals -> 
