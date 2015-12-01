@@ -11,8 +11,6 @@ import Control.Lens
 
 import ComposableEA
 
----- Exemples ----
-
 -- Composition de breedings: trouver un couple d'entiers (a,b) tels que a < b et qui
 -- minimise abs(a + b)
 
@@ -21,7 +19,7 @@ type Individual = (Int,Genome)
 type EAState = (Int,StdGen)
 
 iterInState :: Lens' EAState Int
-iterInState = _1 -- lens fst (\(iter, g) iter2 -> (iter2, g))
+iterInState = _1 
 
 test1 :: StateT EAState IO [Individual]
 test1 = 
@@ -32,15 +30,15 @@ test1 =
         ( \pop -> do 
             showStateAndPop pop
             incrementIter iterInState pop )
-        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b tel que a < b
+        -- Breeding: breed d'abord 20 nouveaux a entre -10 et 10, 
+        -- puis pour chaque nouveau a, breed un b entre a et 10
         ( productWithB (,)
             -- premiers int de chaque génome
-            -- (breedAs (fst . snd) (neighbourGenomes 1 id))
             (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
-            (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
-        -- Expression: la fitness accompagné du génome (abs(a+b), (a,b))
+            (\a -> (breedAs (snd . snd) (breedIntWithin a (10) 1))) )
+        -- Expression: fitness accompagné du génome (abs(a+b), (a,b))
         ( withGenomeE (\(a,b) -> return $ abs (a + b)) ) 
-        -- Objective: les génomes correspondant aux 10 plus basses fitnesses
+        -- Objective: les 10 génomes ayant la fitness la plus petite
         ( minimise fst 10 )
         -- Initial population
         [(200,(100,100)), (50,(-50, 0))]
@@ -78,13 +76,9 @@ useRG = do
     modify (\(a,_) -> (a, g2))
     return g1
 
--- Composition d'expressions: on veut trouver le couple d'entiers (a,b) qui
--- minimise à la fois la somme de a et b et leur distance. Il faut donc
--- exprimer 2 variables à partir d'un génome: abs(a+b) et abs(a-b). On devrait
--- tomber sur le couple (0,0). On utilise toujours comme contexte une writer
--- monad qui enregistre cette fois les deux variables (abssum, absdiff, (a,b)).
+-- Composition d'expressions: abs(a+b) et abs(a-b).
 
-type Individual2 = ((Int, Int), Genome)
+type Individual2 = ((Int, Int),Genome)
 
 test2 :: StateT EAState IO [Individual2]
 test2 = 
@@ -95,19 +89,16 @@ test2 =
         ( \pop -> do 
             showStateAndPop pop
             incrementIter iterInState pop )
-        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b tel que a < b
+        -- Breeding
         ( productWithB (,)
-            -- premiers int de chaque génome
-            -- (breedAs (fst . snd) (neighbourGenomes 1 id))
             (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
             (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
-        -- Expression: la fitness accompagné du génome (abs(a+b), (a,b))
-        --( withGenomeE (\(a,b) -> return $ abs (a + b)) ) 
+        -- Expression: ((abs(a+b), abs(a-b)), (a,b))
         ( withGenomeE $ zipE
             (expressWith (\(a,b) -> abs $ a + b))
             (expressWith (\(a,b) -> abs $ a - b)) )
-        -- Objective: les génomes correspondant aux 10 plus basses fitnesses
-        ( minimise (\((a,b),_) -> a + b) 10 )
+        -- Objective: minimiser abs(a+b) + abs(a-b)
+        ( minimise (\((s,d),_) -> s + d) 10 )
         -- Initial population
         [((200,0),(100,100)), 
          ((50,50),(-100, 50)), 
@@ -117,7 +108,8 @@ test2 =
 runTest2 :: IO ([Individual2], EAState)
 runTest2 = runStateT test2 (0, mkStdGen 0)
 
--- Composition d'objectifs: 2 objectifs d'optimisation: minimiser abssum et minimiser absdiff
+-- Composition d'objectifs: 2 objectifs d'optimisation l'un à la suite de
+-- l'autre: minimiser abssum et minimiser absdiff
 
 test3 :: StateT EAState IO [Individual2]
 test3 = 
@@ -128,21 +120,18 @@ test3 =
         ( \pop -> do 
             showStateAndPop pop
             incrementIter iterInState pop )
-        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b tel que a < b
+        -- Breeding
         ( productWithB (,)
-            -- premiers int de chaque génome
-            -- (breedAs (fst . snd) (neighbourGenomes 1 id))
             (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
             (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
-        -- Expression: la fitness accompagné du génome (abs(a+b), (a,b))
-        --( withGenomeE (\(a,b) -> return $ abs (a + b)) ) 
+        -- Expression
         ( withGenomeE $ zipE
             (expressWith (\(a,b) -> abs $ a + b))
             (expressWith (\(a,b) -> abs $ a - b)) )
-        -- Objective: les génomes correspondant aux 10 plus basses fitnesses
+        -- Objective: minimiser abs(a+b), puis parmi les individus conservés, minimiser abs(a-b)
         ( thenO 
-            (minimise (\((a,_),_) -> a ) 15)
-            (minimise (\((_,b),_) -> b) 10) )
+            (minimise (\((s,_),_) -> s ) 15)
+            (minimise (\((_,d),_) -> d) 10) )
         -- Initial population
         [((200,0),(100,100)), 
          ((50,50),(-100, 50)), 
@@ -164,19 +153,16 @@ test4 =
         ( \pop -> do 
             showStateAndPop pop
             incrementIter iterInState pop )
-        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b tel que a < b
+        -- Breeding: même breeding que précédemment, mais 3 individus générés indépendamment dans chaque niche
         ( byNicheB differenceNiche
             (productWithB (,)
-                -- premiers int de chaque génome
-                -- (breedAs (fst . snd) (neighbourGenomes 1 id))
                 (breedAs (fst . snd) (breedIntWithin (-10) 10 3))
                 (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1)))) )
-        -- Expression: la fitness accompagné du génome (abs(a+b), (a,b))
-        --( withGenomeE (\(a,b) -> return $ abs (a + b)) ) 
+        -- Expression
         ( withGenomeE $ zipE
             (expressWith (\(a,b) -> abs $ a + b))
             (expressWith (\(a,b) -> abs $ a - b)) )
-        -- Objective: les génomes correspondant aux 10 plus basses fitnesses
+        -- Objective: même objectif que précédemment, mais on sélectionne 1 individu dans chaque niche
         ( byNicheO differenceNiche
             (thenO 
                 (minimise (\((a,_),_) -> a) 2)
