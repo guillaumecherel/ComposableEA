@@ -54,12 +54,6 @@ zipWithB f b1 b2 individuals = do
     g2s <- b2 individuals
     return $ zipWith f g1s g2s
 
-breedAs :: (i -> i1) -> Breeding i1 m g1 -> Breeding i m g1
-breedAs itoi1 b = b . fmap itoi1
-
-mapB :: (Monad m) => (i -> m j) -> Breeding i m j
-mapB mutation individuals = mapM mutation individuals
-
 ---- Composition functions: Expression ----
 
 bindE :: (Monad m) => Expression g m p1 -> (p1 -> Expression g m p2) -> Expression g m p2
@@ -79,25 +73,38 @@ withGenomeE express = \g -> (express g) >>= \p -> return (p, g)
 ---- Composition functions: Objective ----
 
 bindO :: (Monad m) => Objective m i -> ([i] -> Objective m i) -> Objective m i
-bindO o1 o2 = \phenotypes -> do
+bindO o1 o2 phenotypes = do
     i1s <- o1 phenotypes
     o2 i1s phenotypes
 
-objectiveAs :: (Monad m) => (p -> p1) -> (p -> i1 -> i) -> Objective m i1 -> Objective m i
-objectiveAs getp1 seti1 o = undefined -- (fmap (fmap (\(p,i1) -> set p i1))) . ( otup ) . (fmap (\p -> (p,getp1)))
+andO :: (Monad m, Eq i) => Objective m i -> Objective m i -> Objective m i
+andO o1 o2 phenotypes = do
+    selected1s <- o1 phenotypes
+    selected2s <- o2 phenotypes
+    return $ intersect selected1s selected2s
 
+orO :: (Monad m, Eq i) => Objective m i -> Objective m i -> Objective m i
+orO o1 o2 phenotypes = do
+    selected1s <- o1 phenotypes
+    selected2s <- o2 phenotypes
+    return $ union selected1s selected2s
+
+thenO :: (Monad m) => Objective m i -> Objective m i -> Objective m i
+thenO o1 o2 phenotypes = do
+    selected1s <- o1 phenotypes
+    o2 selected1s
 -- select the i that also respect the second objective 
 
-andO :: (Monad m, Eq i) => Objective m i -> [i] -> Objective m i
-andO o =  \selected1s -> fmap (intersect selected1s) . o
-
-orO :: (Monad m, Eq i) => Objective m i -> [i] -> Objective m i
-orO o =  \selected1s -> fmap (union selected1s) . o
+-- andO :: (Monad m, Eq i) => Objective m i -> [i] -> Objective m i
+-- andO o =  \selected1s -> fmap (intersect selected1s) . o
+-- 
+-- orO :: (Monad m, Eq i) => Objective m i -> [i] -> Objective m i
+-- orO o =  \selected1s -> fmap (union selected1s) . o
 
 -- Not associative
 
-thenO :: (Monad m) => Objective m i -> [i] -> Objective m i
-thenO o selected1s _ = o selected1s
+-- thenO :: (Monad m) => Objective m i -> [i] -> Objective m i
+-- thenO o selected1s _ = o selected1s
 
 
 
@@ -132,6 +139,14 @@ writepop pop = return $ putStrLn $ "Pop " ++ show pop
 
 
 ---- Breedings ----
+
+-- Generic breeding functions
+
+breedAs :: (i -> i1) -> Breeding i1 m g1 -> Breeding i m g1
+breedAs itoi1 b = b . fmap itoi1
+
+mapB :: (Monad m) => (i -> m j) -> Breeding i m j
+mapB mutation individuals = mapM mutation individuals
 
 class Neighbourhood a where
     neighbours :: Int -> a -> [a]
@@ -193,6 +208,17 @@ stepMutation useRandomGen maxStepSize individual = do
 
 
 ---- Objectives ----
+
+-- Generic functions
+
+objectiveAs :: (Monad m) => (p -> p1) -> (p -> i1 -> i) -> Objective m i1 -> Objective m i
+objectiveAs getp1 seti1 o = undefined -- (fmap (fmap (\(p,i1) -> set p i1))) . ( otup ) . (fmap (\p -> (p,getp1)))
+
+-- Objective building blocks
+
+anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
+anyReaches f goal pop = return (any goalReached pop)
+    where goalReached individual = (f individual) == goal
 
 minimise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective m p
 minimise on keep = return . take keep . sortBy (comparing on)

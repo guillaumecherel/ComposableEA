@@ -36,14 +36,17 @@ test1 =
         ( productWithB (,)
             -- premiers int de chaque génome
             -- (breedAs (fst . snd) (neighbourGenomes 1 id))
-            (breedAs (fst . snd) (breedInt 10))
+            (breedAs (fst . snd) (breedIntWithin (-10) 10 10))
             (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
         -- Expression: la fitness accompagné du génome (abs(a+b), (a,b))
         ( withGenomeE (\(a,b) -> return $ abs (a + b)) ) 
         -- Objective: les génomes correspondant aux 10 plus basses fitnesses
-        ( return . take 10 . sortBy (comparing fst) )
+        ( minimise fst 10 )
         -- Initial population
         [(200,(100,100)), (50,(-50, 0))]
+
+runTest1 :: IO ([Individual], EAState)
+runTest1 = runStateT test1 (0, mkStdGen 0)
 
 breedInt :: Int -> Breeding Int (StateT EAState IO) Int
 breedInt n individuals = do
@@ -57,11 +60,6 @@ breedIntWithin minval maxval n individuals = do
     breeded <- breedInt n individuals
     return $ map (\x -> min maxval (max x minval)) breeded
     
-
-anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
-anyReaches f goal pop = return (any goalReached pop)
-    where goalReached individual = (f individual) == goal
-
 showStateAndPop :: (Show s, Show i) => [i] -> StateT s IO ()
 showStateAndPop pop = do
     s <- get
@@ -79,9 +77,6 @@ useRG = do
     let (g1,g2) = split g
     modify (\(a,_) -> (a, g2))
     return g1
-
-runTest1 :: IO ([Individual], EAState)
-runTest1 = runStateT test1 (0, mkStdGen 0)
 
 -- Composition d'expressions: on veut trouver le couple d'entiers (a,b) qui
 -- minimise à la fois la somme de a et b et leur distance. Il faut donc
@@ -143,9 +138,9 @@ test3 =
             (\(a,b) -> return $ abs(a + b))
             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
         -- Objective: garder 5 meilleurs individus pour chaque critère
-        ( bindO 
+        ( thenO 
             (minimise (\(s,_,_) -> s) 5) 
-            (thenO (minimise (\(_,d,_) -> d) 5)) )
+            (minimise (\(_,d,_) -> d) 5) )
         -- Initial population
         [(200,0,(100,100)), 
          (50,50,(-100, 50)), 
