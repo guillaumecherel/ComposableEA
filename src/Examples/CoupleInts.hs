@@ -63,7 +63,7 @@ breedIntWithin minval maxval n individuals = do
 showStateAndPop :: (Show s, Show i) => [i] -> StateT s IO ()
 showStateAndPop pop = do
     s <- get
-    lift $ putStrLn $ "state: " ++ (show s) ++ " pop: " ++ (show pop)
+    lift $ putStrLn $ "state: " ++ (show s) ++ " pop " ++ (show $ length pop) ++ ": " ++ (show pop)
 
 incrementIter :: Lens' s Int -> [i] -> StateT s IO ()
 incrementIter iterInS pop = do
@@ -140,9 +140,9 @@ test3 =
             (expressWith (\(a,b) -> abs $ a + b))
             (expressWith (\(a,b) -> abs $ a - b)) )
         -- Objective: les génomes correspondant aux 10 plus basses fitnesses
-        ( orO 
-            (minimise (\((a,_),_) -> a ) 5)
-            (minimise (\((_,b),_) -> b) 5) )
+        ( thenO 
+            (minimise (\((a,_),_) -> a ) 15)
+            (minimise (\((_,b),_) -> b) 10) )
         -- Initial population
         [((200,0),(100,100)), 
          ((50,50),(-100, 50)), 
@@ -150,109 +150,46 @@ test3 =
          ((200,0),(-100, -100))]
 
 runTest3 :: IO ([Individual2], EAState)
-runTest3 = runStateT test2 (0, mkStdGen 0)
-
--- test3 :: StateT Int IO [((Int, Int), (Int, Int))]
--- test3 =
---     runEAUntil
---         -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
---         ( \pop -> (lift . return) $ any (\(s,d,_) -> s + d == 0) pop )
---         -- step context: increment iteration
---         ( \pop -> do 
---             -- affichage population
---             iter <- get
---             lift $ putStrLn $ "iter " ++ (show iter) ++ " " ++ (show pop)
---             -- increment iteration
---             put (iter + 1) )
---         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
---         ( bindB 
---             (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
---             (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
---         -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
---         ( bindE
---             (\(a,b) -> return $ abs(a + b))
---             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
---         -- Objective: garder 5 meilleurs individus pour chaque critère
---         ( thenO 
---             (minimise (\(s,_,_) -> s) 5) 
---             (minimise (\(_,d,_) -> d) 5) )
---         -- Initial population
---         [(200,0,(100,100)), 
---          (50,50,(-100, 50)), 
---          (150,50,(-50, -100)), 
---          (200,0,(-100, -100))]
--- 
--- runTest3 :: IO ([(Int, Int, (Int, Int))], Int)
--- runTest3 = runStateT test3 0
+runTest3 = runStateT test3 (0, mkStdGen 0)
 
 -- minimise byNiche 
 
-test4 ::  StateT Int IO [(Int, Int, (Int, Int))]
-test4 =
+
+test4 :: StateT EAState IO [Individual2]
+test4 = 
     runEAUntil
-        -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
-        ( \pop -> (lift . return) False ) 
-            -- any (\(s,d,_) -> s + d == 0) pop )
-        -- affichage: population
+        -- condition d'arrêt
+        ( anyReaches (\((s,d),_) -> s + d) 0 )
+        -- pre-step
         ( \pop -> do 
-            -- affichage population and state
-            iter <- get
-            lift $ putStrLn $ "iter " ++ (show iter) ++ " " ++ (show pop)
-            -- increment iteration
-            put (iter + 1) )
-        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
-        ( bindB 
-            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
-            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
-        -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
-        ( bindE
-            (\(a,b) -> return $ abs(a + b))
-            (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
-        -- Objective: minimiser s + d dans chaque niche
-        ( byNiche (\(s,d,_) -> let n = div d 10 in if n < 0 then 0 else if n > 10 then 10 else n) $ minimise (\(s,d,_) -> s + d) 1 ) -- randomSelect (gets snd) (\newg -> modify $ \(a,g) -> (a, newg)) 1 ) 
+            showStateAndPop pop
+            incrementIter iterInState pop )
+        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b tel que a < b
+        ( byNicheB differenceNiche
+            (productWithB (,)
+                -- premiers int de chaque génome
+                -- (breedAs (fst . snd) (neighbourGenomes 1 id))
+                (breedAs (fst . snd) (breedIntWithin (-10) 10 3))
+                (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1)))) )
+        -- Expression: la fitness accompagné du génome (abs(a+b), (a,b))
+        --( withGenomeE (\(a,b) -> return $ abs (a + b)) ) 
+        ( withGenomeE $ zipE
+            (expressWith (\(a,b) -> abs $ a + b))
+            (expressWith (\(a,b) -> abs $ a - b)) )
+        -- Objective: les génomes correspondant aux 10 plus basses fitnesses
+        ( byNicheO differenceNiche
+            (thenO 
+                (minimise (\((a,_),_) -> a) 2)
+                (minimise (\((_,b),_) -> b) 1)) )
         -- Initial population
-        [(200,0,(100,100)), 
-         (50,50,(-100, 50)), 
-         (150,50,(-50, -100)), 
-         (200,0,(-100, -100))]
+        [((200,0),(100,100)), 
+         ((50,50),(-100, 50)), 
+         ((150,50),(-50, -100)), 
+         ((200,0),(-100, -100))]
 
-runTest4 :: IO ([(Int, Int, (Int, Int))], Int)
-runTest4 = runStateT test4 0
+differenceNiche :: Individual2 -> Int
+differenceNiche ((_,d),_) = max 0 $ min 10 $ div d 10
 
--- random by niche
-
-test5 ::  StateT (Int, StdGen) IO [(Int, Int, (Int, Int))]
-test5 =
-    runEAUntil
-        -- condition d'arrêt: les deux critères abssum et absdiff atteignent 0
-        ( \pop -> do
-            (iter ,g) <- get
-            if iter >= 100
-            then (lift . return) True
-            else (lift . return) False )
-        -- affichage: population
-        ( \pop -> do 
-            -- affichage population and state
-            (iter,g) <- get
-            lift $ putStrLn $ "iter " ++ (show iter) ++ " g " ++ (show g) ++ " " ++ (show pop)
-            -- increment iteration
-            put (iter + 1, g) )
-        -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b
-        ( bindB 
-            (breedAs (\(_,_,g) -> fst g) (neighbourGenomes 1 id))
-            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> return (a,b) ) . breedAs (\(_,_,g) -> snd g) (neighbourGenomes 1 id) ) )
-        -- Expression: les deux critères accompagnés du génome (abs(a+b), abs(a-b), (a,b))
-        ( bindE
-            (\(a,b) -> return $ abs(a + b))
-            (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
-        -- Objective: minimiser s + d dans chaque niche
-        ( byNiche (\(s,d,_) -> let n = div d 10 in if n < 0 then 0 else if n > 10 then 10 else n) $ randomSelect useRG 1 ) 
-        -- Initial population
-        [(200,0,(100,100)), 
-         (50,50,(-100, 50)), 
-         (150,50,(-50, -100)), 
-         (200,0,(-100, -100))]
-
-runTest5 :: IO ([(Int, Int, (Int, Int))], (Int, StdGen))
-runTest5 = runStateT test5 (0, mkStdGen 0)
+runTest4 :: IO ([Individual2], EAState)
+runTest4 = runStateT test4 (0, mkStdGen 0)
 

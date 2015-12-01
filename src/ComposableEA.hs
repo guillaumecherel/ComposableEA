@@ -149,6 +149,10 @@ instance Neighbourhood Int where
 neighbourGenomes :: (Monad m, Neighbourhood g, Eq g) => Int -> (i -> g) -> Breeding i m g
 neighbourGenomes size gini = return . nub . join . map ((neighbours size) . gini)
 
+byNicheB :: (Monad m, Ord n) => (i -> n) -> Breeding i m g -> Breeding i m g
+byNicheB niche b individuals = 
+    let indivsByNiche = Map.elems $ Map.fromListWith (++) [(niche i, [i]) | i <- individuals]
+    in fmap join (mapM b indivsByNiche)
 
 -- Mating
 
@@ -241,8 +245,8 @@ pickElems n g l =
 
 -- diversity :: (Monad m) => 
 
-byNiche :: (Monad m, Ord n) => (i -> n) -> Objective m i -> Objective m i
-byNiche niche o = \individuals -> 
+byNicheO :: (Monad m, Ord n) => (i -> n) -> Objective m i -> Objective m i
+byNicheO niche o = \individuals -> 
     let indivsByNiche = Map.elems $ Map.fromListWith (++) [(niche i, [i]) | i <- individuals]
     in fmap join (mapM o indivsByNiche)
 
