@@ -11,7 +11,6 @@ import Control.Lens
 
 import ComposableEA
 
-
 ---- Exemples ----
 
 -- Composition de breedings: trouver un couple d'entiers (a,b) tels que a < b et qui
@@ -28,16 +27,17 @@ test1 :: StateT EAState IO [Individual]
 test1 = 
     runEAUntil
         -- condition d'arrêt
-        ( individualReaches fst 0 )
+        ( anyReaches fst 0 )
         -- pre-step
         ( \pop -> do 
             showStateAndPop pop
             incrementIter iterInState pop )
         -- Breeding: les voisins de chaque a et, pour chaque nouveau a, les voisins de chaque b tel que a < b
-        ( bindB 
+        ( productWithB (,)
             -- premiers int de chaque génome
-            (breedAs (fst . snd) (neighbourGenomes 1 id))
-            (\as -> fmap (\bs -> as >>= \a -> bs >>= \b -> if a < b then return (a,b) else []) . breedAs (snd.snd) (neighbourGenomes 1 id) ) )
+            -- (breedAs (fst . snd) (neighbourGenomes 1 id))
+            (breedAs (fst . snd) (breedInt 10))
+            (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
         -- Expression: la fitness accompagné du génome (abs(a+b), (a,b))
         ( withGenomeE (\(a,b) -> return $ abs (a + b)) ) 
         -- Objective: les génomes correspondant aux 10 plus basses fitnesses
@@ -45,20 +45,40 @@ test1 =
         -- Initial population
         [(200,(100,100)), (50,(-50, 0))]
 
-individualReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
-individualReaches f goal pop = return (any goalReached pop)
+breedInt :: Int -> Breeding Int (StateT EAState IO) Int
+breedInt n individuals = do
+    parents <- randomGroup useRG n 3 individuals
+    offsprings <- oneOfCrossover useRG parents
+    mutated <- mapB (probabilisticMutation useRG 0.5 (stepMutation useRG 3)) offsprings
+    return mutated
+
+breedIntWithin :: Int -> Int -> Int -> Breeding Int (StateT EAState IO) Int
+breedIntWithin minval maxval n individuals = do
+    breeded <- breedInt n individuals
+    return $ map (\x -> min maxval (max x minval)) breeded
+    
+
+anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
+anyReaches f goal pop = return (any goalReached pop)
     where goalReached individual = (f individual) == goal
 
 showStateAndPop :: (Show s, Show i) => [i] -> StateT s IO ()
 showStateAndPop pop = do
     s <- get
-    lift $ putStrLn $ "state " ++ (show s) ++ " " ++ (show pop)
+    lift $ putStrLn $ "state: " ++ (show s) ++ " pop: " ++ (show pop)
 
 incrementIter :: Lens' s Int -> [i] -> StateT s IO ()
 incrementIter iterInS pop = do
     s <- get 
     let iter = s ^. iterInS
     put (iterInS .~ (iter + 1) $ s) 
+
+useRG :: StateT (Int, StdGen) IO StdGen
+useRG = do
+    g <- gets snd
+    let (g1,g2) = split g
+    modify (\(a,_) -> (a, g2))
+    return g1
 
 runTest1 :: IO ([Individual], EAState)
 runTest1 = runStateT test1 (0, mkStdGen 0)
@@ -196,7 +216,7 @@ test5 =
             (\(a,b) -> return $ abs(a + b))
             (\s (a,b) -> return $ (s, abs(a - b), (a,b))) )
         -- Objective: minimiser s + d dans chaque niche
-        ( byNiche (\(s,d,_) -> let n = div d 10 in if n < 0 then 0 else if n > 10 then 10 else n) $ randomSelect (gets snd) (\newg -> modify $ \(a,g) -> (a, newg)) 1 ) 
+        ( byNiche (\(s,d,_) -> let n = div d 10 in if n < 0 then 0 else if n > 10 then 10 else n) $ randomSelect useRG 1 ) 
         -- Initial population
         [(200,0,(100,100)), 
          (50,50,(-100, 50)), 

@@ -1,12 +1,14 @@
-module ComposableEA where
-
 {-# LANGUAGE RankNTypes #-}
+
+module ComposableEA where
 
 import Data.Ord
 import Data.List
 import qualified Data.Map.Strict as Map
 import System.Random
 import Control.Monad
+import qualified Data.Vector as V
+import Control.Lens
 
 -- TODO: enlever les duplicats dans la composition de breedings
 
@@ -27,7 +29,6 @@ type Expression g m i = g -> m i
 type Objective m i = [i] -> m [i]
 
 
-
 ---- Composition functions: Breeding ----
 
 bindB :: (Monad m) => Breeding i m g1 -> ([g1] -> Breeding i m g2) -> Breeding i m g2
@@ -35,8 +36,29 @@ bindB b1 b2 = \individuals -> do
     g1s <- b1 individuals
     b2 g1s individuals 
 
+productB :: (Monad m) => Breeding i m g1 -> (g1 -> Breeding i m g2) -> Breeding i m g2
+productB = productWithB (\_ b -> b)
+
+productWithB :: (Monad m) => (g1 -> g2 -> g3) -> Breeding i m g1 -> (g1 -> Breeding i m g2) -> Breeding i m g3
+productWithB f b1 b2 individuals = do
+    g1s <- b1 individuals
+    nested <- mapM (\g1 -> (fmap (fmap (f g1))) (b2 g1 individuals)) g1s
+    return $ join nested
+
+zipB :: (Monad m) => Breeding i m g1 -> Breeding i m g2 -> Breeding i m (g1,g2)
+zipB = zipWithB (,)
+
+zipWithB :: (Monad m) => (g1 -> g2 -> g3) -> Breeding i m g1 -> Breeding i m g2 -> Breeding i m g3
+zipWithB f b1 b2 individuals = do
+    g1s <- b1 individuals
+    g2s <- b2 individuals
+    return $ zipWith f g1s g2s
+
 breedAs :: (i -> i1) -> Breeding i1 m g1 -> Breeding i m g1
 breedAs itoi1 b = b . fmap itoi1
+
+mapB :: (Monad m) => (i -> m j) -> Breeding i m j
+mapB mutation individuals = mapM mutation individuals
 
 ---- Composition functions: Expression ----
 
@@ -121,6 +143,50 @@ neighbourGenomes :: (Monad m, Neighbourhood g, Eq g) => Int -> (i -> g) -> Breed
 neighbourGenomes size gini = return . nub . join . map ((neighbours size) . gini)
 
 
+-- Mating
+
+randomGroup :: (Monad m, RandomGen g) => m g -> Int -> Int -> [i] -> m [[i]]
+randomGroup useRandomGen groupcount groupsize [] = return []
+randomGroup useRandomGen groupcount groupsize individuals = do
+    gs <- replicateM groupcount useRandomGen
+    let individualsV = V.fromList individuals
+    let indivscount = length individualsV
+    return $ map (\g -> map (individualsV V.!) (take groupsize (randomRs (0,indivscount - 1) g))) gs
+
+randomPair :: (Monad m, RandomGen g) => m g -> Int -> [i] -> m [(i,i)]
+randomPair useRandomGen paircount [] = return []
+randomPair useRandomGen paircount individuals = do
+    gs <- replicateM paircount useRandomGen
+    let individualsV = V.fromList individuals
+    let indivscount = length individualsV
+    return $ map (\g -> let (g1,g2) = split g 
+                        in (individualsV V.! fst (randomR (0, indivscount - 1) g1), 
+                            individualsV V.! fst (randomR (0, indivscount - 1) g2))) gs
+
+-- Crossover 
+
+oneOfCrossover :: (Monad m, RandomGen g) => m g -> [[i]] -> m [i]
+oneOfCrossover useRandomGen parents = do
+    gs <- mapM (\_ -> useRandomGen) parents
+    return $ map (\(individuals,g) -> individuals !! (fst (randomR (0, (length individuals) - 1) g))) (zip parents gs)
+
+
+-- Mutation
+
+probabilisticMutation :: (Monad m, RandomGen g) => m g -> Double -> (i -> m i) -> i -> m i
+probabilisticMutation useRandomGen mutateProba mutation individual = do
+    g <- useRandomGen
+    let (r, _) = randomR (0,1) g
+    if r < mutateProba
+    then mutation individual
+    else return individual
+
+stepMutation :: (Monad m, RandomGen g, Random i, Num i) => m g -> i -> i -> m i
+stepMutation useRandomGen maxStepSize individual = do
+    g <- useRandomGen
+    let step = fst (randomR (-maxStepSize,maxStepSize) g)
+    return (individual + step)
+    -- return $ map (\(indiv,g) -> let step = fst (randomR (-maxStepSize,maxStepSize) g) in indiv + step ) (zip individuals gs)
 
 ---- Expressions ----
 
@@ -137,12 +203,10 @@ maximise on keep = return . take keep . sortBy (flip $ comparing on)
 pareto :: (Monad m) => Objective m p
 pareto = undefined
 
-randomSelect :: (Monad m, RandomGen g) => m g -> (g -> m ()) -> Int -> Objective m i
-randomSelect getRandomGen putRandomGen n = \individuals -> do
-    g <- getRandomGen 
-    let (g1,g2) = split g
-    putRandomGen g1
-    return $ pickElems n g1 individuals
+randomSelect :: (Monad m, RandomGen g) => m g -> Int -> Objective m i
+randomSelect useRandomGen n = \individuals -> do
+    g <- useRandomGen 
+    return $ pickElems n g individuals
 
 pickElems :: (RandomGen g) => Int -> g -> [a] -> [a]
 pickElems 0 _ _ = []
