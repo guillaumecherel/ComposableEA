@@ -61,12 +61,17 @@ bindE e1 e2 = \genome -> do
     p1 <- e1 genome
     e2 p1 genome
 
-expressAs :: (g -> g1) -> Expression g1 m p1 -> Expression g m p1
-expressAs gtog1 e = e . gtog1
+zipE :: (Monad m) => Expression g m p1 -> Expression g m p2 -> Expression g m (p1,p2)
+zipE = zipWithE (,)
 
-withGenomeE :: (Monad m) => Expression g m p -> Expression g m (p,g)
-withGenomeE express = \g -> (express g) >>= \p -> return (p, g)
--- withGenomeE express = bindE (return . id) (\g -> (fmap (\p -> (p,g))) . express )
+zipWithE :: (Monad m) => (p1 -> p2 -> p3) -> Expression g m p1 -> Expression g m p2 -> Expression g m p3
+zipWithE f e1 e2 genome = do
+    expressed1 <- e1 genome
+    expressed2 <- e2 genome
+    return (f expressed1 expressed2)
+
+expressWith :: (Monad m) => (g -> p) -> Expression g m p
+expressWith f genome = return $ f genome
 
 
 
@@ -205,7 +210,13 @@ stepMutation useRandomGen maxStepSize individual = do
 
 ---- Expressions ----
 
+-- Generic functions
 
+expressAs :: (g -> g1) -> Expression g1 m p1 -> Expression g m p1
+expressAs gtog1 e = e . gtog1
+
+withGenomeE :: (Monad m) => Expression g m p -> Expression g m (p,g)
+withGenomeE express = \g -> (express g) >>= \p -> return (p, g)
 
 ---- Objectives ----
 
