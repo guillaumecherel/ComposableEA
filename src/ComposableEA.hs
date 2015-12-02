@@ -112,10 +112,6 @@ runEA = runEAUntil (\_ -> return False)
 ---- Common stop conditions ----
 
 anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
-
----- Common stop conditions ----
-
-anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
 anyReaches f goal pop = return (any goalReached pop)
     where goalReached individual = (f individual) == goal
 
