@@ -14,7 +14,7 @@ import Control.Lens
 
 type Breeding i m g = [i] -> m [g]
 
-type Expression g m i = g -> m i 
+type Expression g i = g -> i 
 
 type Objective m i = [i] -> m [i]
 
@@ -47,20 +47,14 @@ productWithB f b1 b2 individuals = do
 
 ---- Composition functions: Expression ----
 
-bindE :: (Monad m) => Expression g m p1 -> (p1 -> Expression g m p2) -> Expression g m p2
-bindE e1 e2 = \genome -> do
-    p1 <- e1 genome
-    e2 p1 genome
+bindE :: Expression g p1 -> (p1 -> Expression g p2) -> Expression g p2
+bindE e1 e2 = \genome -> e2 (e1 genome) genome
 
-zipE :: (Monad m) => Expression g m p1 -> Expression g m p2 -> Expression g m (p1,p2)
+zipE :: Expression g p1 -> Expression g p2 -> Expression g (p1,p2)
 zipE = zipWithE (,)
 
-zipWithE :: (Monad m) => (p1 -> p2 -> p3) -> Expression g m p1 -> Expression g m p2 -> Expression g m p3
-zipWithE f e1 e2 genome = do
-    expressed1 <- e1 genome
-    expressed2 <- e2 genome
-    return (f expressed1 expressed2)
-
+zipWithE :: (p1 -> p2 -> p3) -> Expression g p1 -> Expression g p2 -> Expression g p3
+zipWithE f e1 e2 genome = f (e1 genome) (e2 genome)
 
 ---- Composition functions: Objective ----
 
@@ -89,14 +83,14 @@ thenO o1 o2 phenotypes = do
 
 ---- Functions for running the EA ----
 
-stepEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
+stepEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g i -> Objective m i -> [i] -> m [i]
 stepEA preStep breeding expression objective pop = do
     preStep pop
     breeded <- breeding pop
-    expressed <- mapM expression breeded --mapM est l'étape parallelisable
+    let expressed = map expression breeded 
     objective expressed
 
-runEAUntil :: ( Monad m ) => ([i] -> m Bool) -> ( [i] -> m () ) -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
+runEAUntil :: ( Monad m ) => ([i] -> m Bool) -> ( [i] -> m () ) -> Breeding i m g -> Expression g i -> Objective m i -> [i] -> m [i]
 runEAUntil stopCondition preStep b e o pop = do
     stop <- stopCondition pop
     if stop
@@ -105,7 +99,7 @@ runEAUntil stopCondition preStep b e o pop = do
         newpop <- stepEA preStep b e o pop
         runEAUntil stopCondition preStep b e o newpop
 
-runEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g m i -> Objective m i -> [i] -> m [i]
+runEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g i -> Objective m i -> [i] -> m [i]
 runEA = runEAUntil (\_ -> return False)
 
 
