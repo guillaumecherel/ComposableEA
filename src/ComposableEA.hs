@@ -209,6 +209,16 @@ minimise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective m p
 minimise on keep = return . take keep . sortBy (comparing on)
 
 maximise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective m p
+maximise on keep = return . take keep . sortBy (flip $ comparing on)
+
+pareto :: (Monad m) => Objective m p
+pareto = undefined
+
+randomSelect :: (Monad m, RandomGen g) => m g -> Int -> Objective m i
+randomSelect useRandomGen n = \individuals -> do
+    g <- useRandomGen 
+    return $ pickElems n g individuals
+
 pickElems :: (RandomGen g) => Int -> g -> [a] -> [a]
 pickElems 0 _ _ = []
 pickElems n g l = 
