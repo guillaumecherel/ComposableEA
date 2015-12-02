@@ -74,7 +74,7 @@ test1 =
             (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
             (\a -> (breedAs (snd . snd) (breedIntWithin a (10) 1))) )
         -- Expression: fitness accompagné du génome (abs(a+b), (a,b))
-        ( withGenomeE (\(a,b) -> return $ abs (a + b)) ) 
+        ( (withGenomeE . expressWith) (\(a,b) ->  abs (a + b)) ) 
         -- Objective: les 10 génomes ayant la fitness la plus petite
         ( minimise fst 10 )
         -- Initial population

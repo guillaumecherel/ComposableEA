@@ -112,6 +112,10 @@ runEA = runEAUntil (\_ -> return False)
 ---- Common stop conditions ----
 
 anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
+
+---- Common stop conditions ----
+
+anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
 anyReaches f goal pop = return (any goalReached pop)
     where goalReached individual = (f individual) == goal
 
@@ -139,6 +143,10 @@ byNicheB niche b individuals =
 -- Breeding building blocks
 
 -- Mating
+
+--tournament :: (Monad m, Ord o) => (i -> o) -> [i] -> m [(o, i)]
+
+--mqlskdjf  :: [(o, i)] -> m i
 
 randomGroup :: (Monad m, RandomGen g) => m g -> Int -> Int -> [i] -> m [[i]]
 randomGroup useRandomGen groupcount groupsize [] = return []
@@ -188,15 +196,14 @@ probabilisticMutation useRandomGen mutateProba mutation individual = do
 
 -- Generic functions
 
-expressAs :: (g -> g1) -> Expression g1 m p1 -> Expression g m p1
+expressAs :: (g -> g1) -> Expression g1 p1 -> Expression g p1
 expressAs gtog1 e = e . gtog1
 
-withGenomeE :: (Monad m) => Expression g m p -> Expression g m (p,g)
-withGenomeE express = \g -> (express g) >>= \p -> return (p, g)
+withGenomeE :: Expression g p -> Expression g (p,g)
+withGenomeE express = \g -> (express g, g)
 
-expressWith :: (Monad m) => (g -> p) -> Expression g m p
-expressWith f genome = return $ f genome
-
+expressWith :: (g -> p) -> Expression g p
+expressWith f genome = f genome
 
 ---- Objectives ----
 
@@ -206,16 +213,6 @@ minimise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective m p
 minimise on keep = return . take keep . sortBy (comparing on)
 
 maximise :: (Monad m, Ord p1) => (p -> p1) -> Int -> Objective m p
-maximise on keep = return . take keep . sortBy (flip $ comparing on)
-
-pareto :: (Monad m) => Objective m p
-pareto = undefined
-
-randomSelect :: (Monad m, RandomGen g) => m g -> Int -> Objective m i
-randomSelect useRandomGen n = \individuals -> do
-    g <- useRandomGen 
-    return $ pickElems n g individuals
-
 pickElems :: (RandomGen g) => Int -> g -> [a] -> [a]
 pickElems 0 _ _ = []
 pickElems n g l = 
