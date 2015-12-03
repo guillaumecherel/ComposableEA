@@ -61,22 +61,24 @@ iterInState = _1
 test1 :: StateT EAState IO [Individual]
 test1 = 
     runEAUntil
-        -- condition d'arrêt
-        ( anyReaches fst 0 )
-        -- pre-step
-        ( \pop -> do 
-            showStateAndPop pop
-            incrementIter iterInState pop )
-        -- Breeding: breed d'abord 20 nouveaux a entre -10 et 10, 
-        -- puis pour chaque nouveau a, breed un b entre a et 10
-        ( productWithB (,)
-            -- premiers int de chaque génome
-            (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
-            (\a -> (breedAs (snd . snd) (breedIntWithin a (10) 1))) )
-        -- Expression: fitness accompagné du génome (abs(a+b), (a,b))
-        ( (withGenomeE . expressWith) (\(a,b) ->  abs (a + b)) ) 
-        -- Objective: les 10 génomes ayant la fitness la plus petite
-        ( minimise fst 10 )
+        -- stop condition
+        ( anyReaches ((0 ==) . fst))
+        ( stepEA
+            -- pre-step
+            ( \pop -> do 
+                showStateAndPop pop
+                incrementIter iterInState pop )
+            -- Breeding: breed d'abord 20 nouveaux a entre -10 et 10, 
+            -- puis pour chaque nouveau a, breed un b entre a et 10
+            ( productWithB (,)
+                -- premiers int de chaque génome
+                (breedAs (fst . snd) (breedIntWithin (-10) 10 500))
+                (\a -> (breedAs (snd . snd) (breedIntWithin a (10) 1))) )
+            -- Expression: fitness accompagné du génome (abs(a+b), (a,b))
+            ( (withGenomeE . expressWith) (\(a,b) ->  abs (a + b)) ) 
+            -- Objective: les 10 génomes ayant la fitness la plus petite
+            ( minimise fst 200 ) 
+            ( muCommaLambda ) )
         -- Initial population
         [(200,(100,100)), (50,(-50, 0))]
 
@@ -91,21 +93,23 @@ test2 :: StateT EAState IO [Individual2]
 test2 = 
     runEAUntil
         -- condition d'arrêt
-        ( anyReaches (\((s,d),_) -> s + d) 0 )
-        -- pre-step
-        ( \pop -> do 
-            showStateAndPop pop
-            incrementIter iterInState pop )
-        -- Breeding
-        ( productWithB (,)
-            (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
-            (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
-        -- Expression: ((abs(a+b), abs(a-b)), (a,b))
-        ( withGenomeE $ zipE
-            (expressWith (\(a,b) -> abs $ a + b))
-            (expressWith (\(a,b) -> abs $ a - b)) )
-        -- Objective: minimiser abs(a+b) + abs(a-b)
-        ( minimise (\((s,d),_) -> s + d) 10 )
+        ( anyReaches (\((s,d),_) -> (s + d) == 0) )
+        ( stepEA 
+            -- pre-step
+            ( \pop -> do 
+                showStateAndPop pop
+                incrementIter iterInState pop )
+            -- Breeding
+            ( productWithB (,)
+                (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
+                (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
+            -- Expression: ((abs(a+b), abs(a-b)), (a,b))
+            ( withGenomeE $ zipE
+                (expressWith (\(a,b) -> abs $ a + b))
+                (expressWith (\(a,b) -> abs $ a - b)) )
+            -- Objective: minimiser abs(a+b) + abs(a-b)
+            ( minimise (\((s,d),_) -> s + d) 10 )
+            ( muCommaLambda ) )
         -- Initial population
         [((200,0),(100,100)), 
          ((50,50),(-100, 50)), 
@@ -122,23 +126,25 @@ test3 :: StateT EAState IO [Individual2]
 test3 = 
     runEAUntil
         -- condition d'arrêt
-        ( anyReaches (\((s,d),_) -> s + d) 0 )
-        -- pre-step
-        ( \pop -> do 
-            showStateAndPop pop
-            incrementIter iterInState pop )
-        -- Breeding
-        ( productWithB (,)
-            (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
-            (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
-        -- Expression
-        ( withGenomeE $ zipE
-            (expressWith (\(a,b) -> abs $ a + b))
-            (expressWith (\(a,b) -> abs $ a - b)) )
-        -- Objective: minimiser abs(a+b), puis parmi les individus conservés, minimiser abs(a-b)
-        ( thenO 
-            (minimise (\((s,_),_) -> s ) 15)
-            (minimise (\((_,d),_) -> d) 10) )
+        ( anyReaches (\((s,d),_) -> (s + d) == 0) )
+        ( stepEA 
+            -- pre-step
+            ( \pop -> do 
+                showStateAndPop pop
+                incrementIter iterInState pop )
+            -- Breeding
+            ( productWithB (,)
+                (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
+                (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
+            -- Expression
+            ( withGenomeE $ zipE
+                (expressWith (\(a,b) -> abs $ a + b))
+                (expressWith (\(a,b) -> abs $ a - b)) )
+            -- Objective: minimiser abs(a+b), puis parmi les individus conservés, minimiser abs(a-b)
+            ( thenO 
+                (minimise (\((s,_),_) -> s ) 15)
+                (minimise (\((_,d),_) -> d) 10) )
+            ( muCommaLambda ) )
         -- Initial population
         [((200,0),(100,100)), 
          ((50,50),(-100, 50)), 
@@ -155,25 +161,27 @@ test4 :: StateT EAState IO [Individual2]
 test4 = 
     runEAUntil
         -- condition d'arrêt
-        ( anyReaches (\((s,d),_) -> s + d) 0 )
-        -- pre-step
-        ( \pop -> do 
-            showStateAndPop pop
-            incrementIter iterInState pop )
-        -- Breeding: même breeding que précédemment, mais 3 individus générés indépendamment dans chaque niche
-        ( byNicheB differenceNiche
-            (productWithB (,)
-                (breedAs (fst . snd) (breedIntWithin (-10) 10 3))
-                (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1)))) )
-        -- Expression
-        ( withGenomeE $ zipE
-            (expressWith (\(a,b) -> abs $ a + b))
-            (expressWith (\(a,b) -> abs $ a - b)) )
-        -- Objective: même objectif que précédemment, mais on sélectionne 1 individu dans chaque niche
-        ( byNicheO differenceNiche
-            (thenO 
-                (minimise (\((a,_),_) -> a) 2)
-                (minimise (\((_,b),_) -> b) 1)) )
+        ( anyReaches (\((s,d),_) -> (s + d) == 0) )
+        ( stepEA 
+            -- pre-step
+            ( \pop -> do 
+                showStateAndPop pop
+                incrementIter iterInState pop )
+            -- Breeding: même breeding que précédemment, mais 3 individus générés indépendamment dans chaque niche
+            ( byNicheB differenceNiche
+                (productWithB (,)
+                    (breedAs (fst . snd) (breedIntWithin (-10) 10 3))
+                    (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1)))) )
+            -- Expression
+            ( withGenomeE $ zipE
+                (expressWith (\(a,b) -> abs $ a + b))
+                (expressWith (\(a,b) -> abs $ a - b)) )
+            -- Objective: même objectif que précédemment, mais on sélectionne 1 individu dans chaque niche
+            ( byNicheO differenceNiche
+                (thenO 
+                    (minimise (\((a,_),_) -> a) 2)
+                    (minimise (\((_,b),_) -> b) 1)) )
+            ( muCommaLambda ) )
         -- Initial population
         [((200,0),(100,100)), 
          ((50,50),(-100, 50)), 

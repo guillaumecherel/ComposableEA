@@ -83,36 +83,45 @@ thenO o1 o2 phenotypes = do
 
 ---- Functions for running the EA ----
 
-stepEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g i -> Objective m i -> [i] -> m [i]
-stepEA preStep breeding expression objective pop = do
+stepEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g i -> Objective m i -> ReplacementStrategy i -> [i] -> m [i]
+stepEA preStep breeding expression objective replacementStrategy pop = do
     preStep pop
     breeded <- breeding pop
     let expressed = map expression breeded 
-    objective expressed
+    objective (replacementStrategy pop expressed)
 
-runEAUntil :: ( Monad m ) => ([i] -> m Bool) -> ( [i] -> m () ) -> Breeding i m g -> Expression g i -> Objective m i -> [i] -> m [i]
-runEAUntil stopCondition preStep b e o pop = do
+runEAUntil :: ( Monad m ) => ([i] -> m Bool) -> ( [i] -> m [i] ) -> [i] -> m [i]
+runEAUntil stopCondition stepFunction pop = do
     stop <- stopCondition pop
     if stop
     then return pop
     else do
-        newpop <- stepEA preStep b e o pop
-        runEAUntil stopCondition preStep b e o newpop
+        newpop <- stepFunction pop
+        runEAUntil stopCondition stepFunction newpop
 
-runEA :: (Monad m) => ([i] -> m ()) -> Breeding i m g -> Expression g i -> Objective m i -> [i] -> m [i]
+runEA :: (Monad m) => ( [i] -> m [i] ) -> [i] -> m [i] 
 runEA = runEAUntil (\_ -> return False)
 
 
 ---- Common stop conditions ----
 
-anyReaches :: (Eq a, Monad m) => (i -> a) -> a -> [i] -> m Bool
-anyReaches f goal pop = return (any goalReached pop)
-    where goalReached individual = (f individual) == goal
+anyReaches :: (Monad m) => (i -> Bool) -> [i] -> m Bool
+anyReaches p pop = return (any p pop)
 
 ---- Common pre-step functions ----
 
 writepop :: (Monad m, Show i) => [i] -> m (IO ())
 writepop pop = return $ putStrLn $ "Pop " ++ show pop
+
+---- Replacement strategies ----
+
+type ReplacementStrategy i = [i] -> [i] -> [i]
+
+muPlusLambda :: ReplacementStrategy i
+muPlusLambda parents offsprings = parents ++ offsprings
+
+muCommaLambda :: ReplacementStrategy i
+muCommaLambda parents offsprings = offsprings
 
 
 ---- Breedings ----
