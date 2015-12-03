@@ -190,6 +190,14 @@ probabilisticMutation useRandomGen mutateProba mutation individual = do
     then mutation individual
     else return individual
 
+-- Stochasticity
+
+withRandomGen :: (Monad m, RandomGen r) => m r -> Breeding i m g -> Breeding i m (r,g)
+withRandomGen useRandomGen b individuals = do
+    breeded <- b individuals
+    rgs <- replicateM (length breeded) useRandomGen
+    return $ zip rgs breeded
+
 
 ---- Expressions ----
 
