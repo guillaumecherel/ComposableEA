@@ -128,8 +128,8 @@ muCommaLambda parents offsprings = offsprings
 
 -- Generic breeding functions
 
-breedAs :: (i -> i1) -> Breeding i1 m g -> Breeding i m g
-breedAs itoi1 b = b . fmap itoi1
+asB :: (i -> i1) -> Breeding i1 m g -> Breeding i m g
+asB itoi1 b = b . fmap itoi1
 
 mapB :: (Monad m) => (i -> m g) -> Breeding i m g
 mapB mutation individuals = mapM mutation individuals
@@ -192,8 +192,8 @@ probabilisticMutation useRandomGen mutateProba mutation individual = do
 
 -- Stochasticity
 
-withRandomGen :: (Monad m, RandomGen r) => m r -> Breeding i m g -> Breeding i m (r,g)
-withRandomGen useRandomGen b individuals = do
+withRandomGenB :: (Monad m, RandomGen r) => m r -> Breeding i m g -> Breeding i m (r,g)
+withRandomGenB useRandomGen b individuals = do
     breeded <- b individuals
     rgs <- replicateM (length breeded) useRandomGen
     return $ zip rgs breeded

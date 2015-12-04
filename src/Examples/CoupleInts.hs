@@ -72,8 +72,8 @@ test1 =
             -- puis pour chaque nouveau a, breed un b entre a et 10
             ( productWithB (,)
                 -- premiers int de chaque génome
-                (breedAs (fst . snd) (breedIntWithin (-10) 10 500))
-                (\a -> (breedAs (snd . snd) (breedIntWithin a (10) 1))) )
+                (asB (fst . snd) (breedIntWithin (-10) 10 500))
+                (\a -> (asB (snd . snd) (breedIntWithin a (10) 1))) )
             -- Expression: fitness accompagné du génome (abs(a+b), (a,b))
             ( (withGenomeE . expressWith) (\(a,b) ->  abs (a + b)) ) 
             -- Objective: les 10 génomes ayant la fitness la plus petite
@@ -101,8 +101,8 @@ test2 =
                 incrementIter iterInState pop )
             -- Breeding
             ( productWithB (,)
-                (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
-                (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
+                (asB (fst . snd) (breedIntWithin (-10) 10 20))
+                (\a -> (asB (snd . snd) (breedIntWithin a (maxBound) 1))) )
             -- Expression: ((abs(a+b), abs(a-b)), (a,b))
             ( withGenomeE $ zipE
                 (expressWith (\(a,b) -> abs $ a + b))
@@ -134,8 +134,8 @@ test3 =
                 incrementIter iterInState pop )
             -- Breeding
             ( productWithB (,)
-                (breedAs (fst . snd) (breedIntWithin (-10) 10 20))
-                (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1))) )
+                (asB (fst . snd) (breedIntWithin (-10) 10 20))
+                (\a -> (asB (snd . snd) (breedIntWithin a (maxBound) 1))) )
             -- Expression
             ( withGenomeE $ zipE
                 (expressWith (\(a,b) -> abs $ a + b))
@@ -170,8 +170,8 @@ test4 =
             -- Breeding: même breeding que précédemment, mais 3 individus générés indépendamment dans chaque niche
             ( byNicheB differenceNiche
                 (productWithB (,)
-                    (breedAs (fst . snd) (breedIntWithin (-10) 10 3))
-                    (\a -> (breedAs (snd . snd) (breedIntWithin a (maxBound) 1)))) )
+                    (asB (fst . snd) (breedIntWithin (-10) 10 3))
+                    (\a -> (asB (snd . snd) (breedIntWithin a (maxBound) 1)))) )
             -- Expression
             ( withGenomeE $ zipE
                 (expressWith (\(a,b) -> abs $ a + b))
