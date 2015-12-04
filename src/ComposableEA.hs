@@ -106,7 +106,7 @@ runEA = runEAUntil (\_ -> return False)
 ---- Common stop conditions ----
 
 anyReaches :: (Monad m) => (i -> Bool) -> [i] -> m Bool
-anyReaches p pop = return (any p pop)
+anyReaches goalReached pop = return (any goalReached pop)
 
 ---- Common pre-step functions ----
 
@@ -128,7 +128,7 @@ muCommaLambda parents offsprings = offsprings
 
 -- Generic breeding functions
 
-breedAs :: (i -> i1) -> Breeding i1 m g1 -> Breeding i m g1
+breedAs :: (i -> i1) -> Breeding i1 m g -> Breeding i m g
 breedAs itoi1 b = b . fmap itoi1
 
 mapB :: (Monad m) => (i -> m g) -> Breeding i m g
